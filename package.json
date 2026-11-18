@@ -1,0 +1,12 @@
+{
+  "name": "meta-assets",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Meta AI image and motion asset workflow for CapCut and Remotion",
+  "scripts": {
+    "create-image": "node scripts/create-image.js"
+  },
+  "dependencies": {
+    "playwright": "^1.65.1"
+  }
+}

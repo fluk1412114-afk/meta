@@ -1,0 +1,6 @@
+interface:
+  display_name: "meta"
+  short_description: "Use Meta AI for social research and creative work"
+  default_prompt: "Use meta to complete this task through Meta AI, choosing the appropriate workflow automatically."
+policy:
+  allow_implicit_invocation: true
