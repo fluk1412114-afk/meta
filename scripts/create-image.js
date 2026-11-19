@@ -40,7 +40,6 @@ if (!prompt || !prompt.trim()) {
     }
     await send.click();
     console.log('PROMPT_SUBMITTED');
-    console.log('PROMPT:', prompt.trim());
 
     await page.waitForFunction(({ baseline, baselineAlts }) => {
       const images = [...document.querySelectorAll('img[data-testid="ur-image-tile"]')];
@@ -56,11 +55,10 @@ if (!prompt || !prompt.trim()) {
     await latest.hover();
     const dimensions = await latest.evaluate(image => ({
       width: image.naturalWidth,
-      height: image.naturalHeight,
-      alt: image.getAttribute('alt')
+      height: image.naturalHeight
     }));
     console.log('IMAGE_GENERATED:', dimensions.width + 'x' + dimensions.height);
-    console.log('IMAGE_ALT:', dimensions.alt || '');
+    // Do not log image alt text; it may contain user-provided or generated personal details.
 
     const mediaGroup = latest.locator('xpath=ancestor::div[contains(@class,"group/media-item")]').first();
     const downloadButton = mediaGroup.getByRole('button', { name: 'ดาวน์โหลด' });
@@ -96,7 +94,7 @@ if (!prompt || !prompt.trim()) {
     }
     const verified = fs.statSync(finalPath);
     console.log('DOWNLOAD_VERIFIED:', verified.size > 0 && detected !== 'unknown');
-    console.log('SAVED_PATH:', finalPath);
+    // Avoid printing local filesystem paths that may disclose the Windows account name.
     console.log('FILE_SIZE_BYTES:', verified.size);
     console.log('FILE_TYPE:', detected);
     console.log('IMAGE_DIMENSIONS:', dimensions.width + 'x' + dimensions.height);
