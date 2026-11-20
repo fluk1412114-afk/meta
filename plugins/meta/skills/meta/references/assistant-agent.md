@@ -26,6 +26,7 @@ Ask it to state assumptions when information is missing. For consequential decis
 Meta AI's response is an input, not automatic ground truth. Check factual claims against the available source material when the task depends on accuracy. For current facts, use current sources if available. Preserve source links and distinguish sourced facts from recommendations or creative suggestions.
 
 
+
 ## Collaboration with ChatGPT
 
 For multi-step or quality-sensitive tasks, Meta AI leads the supported work on its website while ChatGPT acts as an independent analyst and reviewer. Use the handoff and review loop in [collaboration-model.md](collaboration-model.md): send Meta a brief with constraints and acceptance criteria, inspect its output independently, and send focused corrections back when needed.
