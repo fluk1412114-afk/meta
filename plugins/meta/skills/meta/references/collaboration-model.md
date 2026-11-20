@@ -50,7 +50,7 @@ Send only actionable corrections back to Meta. Do not ask Meta to confirm its ow
 
 ## Escalation and approvals
 
-- If a task needs local file access, local execution, application control, or deployment outside Meta AI, route that step to Remote or another explicitly authorized tool.
+- If a task needs local file access, local execution, application control, or deployment outside Meta AI, route that step to Remote or another authorized tool.
 - If no authorized computer-access tool is available, return the generated file or instructions and explain that local installation/execution remains undone.
 - Obtain explicit user approval before public publishing, messaging, purchases, paid credits, destructive file operations, or other consequential actions.
 - If a capability is absent from the live Meta UI, stop that branch and offer a useful alternative rather than pretending it worked.
