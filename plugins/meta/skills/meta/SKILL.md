@@ -41,7 +41,7 @@ This skill owns a local copy of the working CDP/Playwright helpers. Do not repla
 
 - Engine files: scripts/launch-meta-cdp.js, scripts/find-cdp-endpoint.js, scripts/connect-meta-ai.js, and scripts/create-image.js.
 - Node dependency: Playwright, declared in package.json.
-- Dedicated persistent Chrome profile: %LOCALAPPDATA%\\MetaAI-CDP-Profile; CDP port defaults to 9222.
+- Dedicated persistent Chrome profile: %LOCALAPPDATA%\MetaAI-CDP-Profile; CDP port defaults to 9222.
 - Launch/reuse with node scripts/launch-meta-cdp.js; connect only through find-cdp-endpoint.js and chromium.connectOverCDP.
 - Reuse the existing context/profile and signed-in session. Never attach to the user's everyday Chrome profile.
 - Do not read, export, copy, print, or persist cookies, local storage, passwords, auth tokens, or other profile secrets.
@@ -52,7 +52,7 @@ This skill owns a local copy of the working CDP/Playwright helpers. Do not repla
 - Do not publish, comment, react, follow, message, share, or change account settings unless explicitly requested. For consequential public or interpersonal actions, prepare the content and obtain a final confirmation immediately before submission.
 - Do not purchase, spend paid credits, or trigger paid features without explicit approval.
 
-The image helper is a known working path for image generation, but its selectors may become stale. Inspect the live UI and helper before relying on it; update selectors only when the live UI proves a change is needed. Do not assume the helper supports video or social search.
+The image helper is a known working path for image generation, but its selectors may become stale. Inspect and update it only when the live UI proves a change is needed. Do not assume the helper supports video or social search.
 
 ## Reliability and reporting
 
