@@ -1,0 +1,13 @@
+{
+  "name": "meta",
+  "owner": {
+    "name": "fluk1412114-afk"
+  },
+  "plugins": [
+    {
+      "name": "meta",
+      "source": "./plugins/meta",
+      "description": "meta ai for any ai"
+    }
+  ]
+}
