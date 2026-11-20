@@ -13,8 +13,8 @@ function chromePath() {
   return candidates.find((candidate) => candidate && fs.existsSync(candidate));
 }
 function matchingProcesses() {
-  const ps = "Get-CimInstance Win32_Process -Filter \\"Name='chrome.exe'\\" | Select-Object -ExpandProperty CommandLine";
-  try { return execFileSync('powershell.exe', ['-NoProfile', '-Command', ps], { encoding: 'utf8', windowsHide: true }).split(/\\r?\\n/).filter(Boolean); }
+  const ps = "Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | Select-Object -ExpandProperty CommandLine";
+  try { return execFileSync('powershell.exe', ['-NoProfile', '-Command', ps], { encoding: 'utf8', windowsHide: true }).split(/\r?\n/).filter(Boolean); }
   catch { throw new Error('Cannot inspect Chrome processes safely; refusing to launch another instance.'); }
 }
 async function ready() {
