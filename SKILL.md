@@ -5,7 +5,7 @@ description: Operate Meta AI on the web as an adaptive assistant for social disc
 
 # meta — Adaptive Meta AI Agent
 
-> **Installation and first-run setup:** see [README.md](README.md) for the quick start and [คู่มือติดตั้งและใช้งานฉบับเต็ม](docs/INSTALL-AND-USAGE-TH.md) for Windows prerequisites, Codex Skill installation, Chrome CDP setup, usage, security, and troubleshooting.
+> **Installation and first-run setup:** see [README.md](README.md) for the quick start and [คู่มือติดตั้งและใช้งานฉบับเต็ม](docs/INSTALL-AND-USAGE-TH.md) for Windows prerequisites, Codex Skill installation, Edge Browser MCP pairing, Chrome CDP fallback, usage, security, and troubleshooting.
 
 
 Use Meta AI through the real website as a flexible operator. Select the workflow from the user's goal and the capabilities actually available in the signed-in account and current UI. Do not force every request through a fixed pipeline.
@@ -17,12 +17,12 @@ Meta AI is the **web-side operational lead**. ChatGPT is the **independent analy
 1. Parse the user's goal and prepare a clear brief and acceptance criteria.
 2. Select the relevant Meta AI website capability: social discovery/research, assistant/reasoning, image/video generation, website/artifact creation, file delivery, or a multi-step combination. Website/file creation and delivery are conditional on the current UI actually supporting them.
 3. Read only the relevant guide(s):
-   - Collaboration roles and handoff loop: [references/collaboration-model.md](references/collaboration-model.md)
+   - Browser transport selection and safe interaction: [references/browser-control.md](references/browser-control.md)\n   - Collaboration roles and handoff loop: [references/collaboration-model.md](references/collaboration-model.md)
    - Social search, Facebook, Instagram, Threads, friends' posts: [references/social-research.md](references/social-research.md)
    - Image/video creation and output handling: [references/creative-generation.md](references/creative-generation.md)
    - Planning, analysis, general assistant work: [references/assistant-agent.md](references/assistant-agent.md)
    - Feature discovery, account/region limits, and capability verification: [references/capability-map.md](references/capability-map.md)
-4. Use the persistent Meta AI browser engine described below. Inspect the live page before acting; UI and feature availability can change.
+4. Prefer the paired Microsoft Edge Browser MCP when its tools are exposed and browser_status confirms connection; otherwise use the dedicated Chrome CDP/Playwright fallback. Follow [references/browser-control.md](references/browser-control.md). Inspect the live page before acting; UI and feature availability can change.
 5. Let Meta lead the supported website-side execution. ChatGPT independently reviews important outputs and sends focused correction requests to Meta when needed.
 6. Route local computer, local filesystem, installed-app, command-line, or external deployment work to Remote or another explicitly authorized tool. Meta itself has no direct access to the user's computer.
 7. Verify the actual result before reporting success. Distinguish completed, partially completed, blocked, and unverified work.
