@@ -17,7 +17,8 @@ Meta AI is the **web-side operational lead**. ChatGPT is the **independent analy
 1. Parse the user's goal and prepare a clear brief and acceptance criteria.
 2. Select the relevant Meta AI website capability: social discovery/research, assistant/reasoning, image/video generation, website/artifact creation, file delivery, or a multi-step combination. Website/file creation and delivery are conditional on the current UI actually supporting them.
 3. Read only the relevant guide(s):
-   - Browser transport selection and safe interaction: [references/browser-control.md](references/browser-control.md)\n   - Collaboration roles and handoff loop: [references/collaboration-model.md](references/collaboration-model.md)
+   - Browser transport selection and safe interaction: [references/browser-control.md](references/browser-control.md)
+   - Collaboration roles and handoff loop: [references/collaboration-model.md](references/collaboration-model.md)
    - Social search, Facebook, Instagram, Threads, friends' posts: [references/social-research.md](references/social-research.md)
    - Image/video creation and output handling: [references/creative-generation.md](references/creative-generation.md)
    - Planning, analysis, general assistant work: [references/assistant-agent.md](references/assistant-agent.md)
@@ -38,9 +39,20 @@ Do not ask the user to choose an internal mode when their intent is clear. Infer
 - Requests such as "find a real post, turn it into a 30-second video" → chain social research → summarize the source and trend → create a concept/script → generate media where supported → verify outputs.
 - If Meta AI cannot perform a step, do not pretend it can. Offer the closest useful alternative, such as preparing prompts or a plan in chat.
 
-## Browser engine — preserve and reuse
+## Browser engine — Edge preferred, Chrome fallback
 
-This skill owns a local copy of the working CDP/Playwright helpers. Do not replace them with a different browser integration unless the user explicitly asks.
+### Preferred: Microsoft Edge Browser MCP
+
+- Use the separately installed Tunnel Dashboard Edge extension connected to the local MCP Bridge.
+- Check `browser_status` before starting. Only use Edge tools when the active runtime exposes them and status confirms the extension is connected.
+- Available tools may include `browser_list_tabs`, `browser_get_page`, `browser_get_elements`, `browser_navigate`, `browser_click`, `browser_type`, and `browser_screenshot`. Use the exact schemas advertised by the runtime.
+- Work only in the intended Meta AI tab. Inspect the page before acting and after meaningful changes.
+- This transport does not require CDP or Playwright and must not be described as using either.
+- The extension, Bridge, pairing token, and site permissions are external prerequisites; this Skill does not install or configure them.
+
+### Fallback: dedicated Chrome CDP/Playwright
+
+Preserve the existing helpers. Use them only when Edge MCP is unavailable.
 
 - Engine files: scripts/launch-meta-cdp.js, scripts/find-cdp-endpoint.js, scripts/connect-meta-ai.js, and scripts/create-image.js.
 - Node dependency: Playwright, declared in package.json.
