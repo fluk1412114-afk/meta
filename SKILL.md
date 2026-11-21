@@ -5,6 +5,9 @@ description: Operate Meta AI on the web as an adaptive assistant for social disc
 
 # meta — Adaptive Meta AI Agent
 
+> **Installation and first-run setup:** see [README.md](README.md) for the quick start and [คู่มือติดตั้งและใช้งานฉบับเต็ม](docs/INSTALL-AND-USAGE-TH.md) for Windows prerequisites, Codex Skill installation, Chrome CDP setup, usage, security, and troubleshooting.
+
+
 Use Meta AI through the real website as a flexible operator. Select the workflow from the user's goal and the capabilities actually available in the signed-in account and current UI. Do not force every request through a fixed pipeline.
 
 ## Operating model

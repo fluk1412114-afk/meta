@@ -1,0 +1,72 @@
+# meta — Meta AI Agent Skill
+
+An adaptive Agent Skill for using Meta AI through its website for social discovery, research, planning, image/video workflows, and multi-step tasks. It uses a dedicated Windows Chrome profile with CDP/Playwright for the supported browser automation helpers.
+
+> This repository is a community-maintained skill and automation helper, not an official Meta product or client. Meta AI features vary by account, region, and rollout. Always verify the live UI before relying on a capability.
+
+## Quick start
+
+**Requirements:** Windows 10/11, Node.js 20+, npm, Google Chrome, and a Meta account with access to Meta AI.
+
+```powershell
+git clone https://github.com/fluk1412114-afk/meta.git
+cd meta
+npm ci
+node scripts/launch-meta-cdp.js
+```
+
+On first launch, sign in manually in the dedicated Chrome window. Then, from another PowerShell window:
+
+```powershell
+node scripts/connect-meta-ai.js
+```
+
+Generate an image:
+
+```powershell
+node scripts/create-image.js "A warm minimalist coffee shop in a garden at sunrise"
+```
+
+The image helper saves verified downloads to `%USERPROFILE%\\Pictures\\MetaAI-Generated` by default.
+
+## Install the Skill
+
+Cloning the repository does not automatically register the Skill with Codex. To install it for the current Windows user:
+
+```powershell
+$skills = Join-Path $HOME ".agents\\skills"
+New-Item -ItemType Directory -Force -Path $skills | Out-Null
+git clone https://github.com/fluk1412114-afk/meta.git (Join-Path $skills "meta")
+Set-Location (Join-Path $skills "meta")
+npm ci
+```
+
+- Codex CLI / IDE: invoke with `$meta`.
+- ChatGPT Desktop with standalone Skills support: add/import the folder only if the current Skills UI provides that flow, then invoke with `@meta`. Cloning this repo does not register it automatically.
+- Repository-scoped install: place the complete folder at `.agents/skills/meta/` in your project.
+
+See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.md) for prerequisites, setup order, workflows, security, troubleshooting, and updates.
+
+## Repository map
+
+| Path | Purpose |
+|---|---|
+| `SKILL.md` | Main agent instructions and routing |
+| `agents/openai.yaml` | Skill display metadata and implicit invocation |
+| `references/` | Workflow guides and capability verification |
+| `scripts/launch-meta-cdp.js` | Launch/reuse dedicated Chrome CDP profile |
+| `scripts/find-cdp-endpoint.js` | Verify the dedicated local CDP endpoint |
+| `scripts/connect-meta-ai.js` | Connection diagnostic |
+| `scripts/create-image.js` | Image generation and download helper |
+
+## Security notes
+
+- The browser helper uses a dedicated profile at `%LOCALAPPDATA%\\MetaAI-CDP-Profile`; do not use your everyday Chrome profile.
+- Sign in manually. The scripts do not automate passwords, MFA, or CAPTCHA.
+- Never publish the browser profile, cookies, storage, credentials, or private downloads.
+- Keep CDP bound to the local machine. Do not expose the debugging port to a network.
+- Public posting, messaging, purchases, and account-setting changes require explicit user authorization and appropriate confirmation.
+
+## License
+
+No license file is currently present in this repository. Do not assume the code is open for unrestricted reuse or redistribution; contact the repository owner for licensing terms.
