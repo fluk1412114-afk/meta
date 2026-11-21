@@ -1,12 +1,12 @@
 # meta — Meta AI Agent Skill
 
-An adaptive Agent Skill for using Meta AI through its website for social discovery, research, planning, image/video workflows, and multi-step tasks. It uses a dedicated Windows Chrome profile with CDP/Playwright for the supported browser automation helpers.
+An adaptive Agent Skill for using Meta AI through its website for social discovery, research, planning, image/video workflows, and multi-step tasks. It prefers Microsoft Edge Browser MCP through the separate Tunnel Dashboard extension/Bridge, with the existing dedicated Windows Chrome CDP/Playwright helpers retained as a fallback.
 
 > This repository is a community-maintained skill and automation helper, not an official Meta product or client. Meta AI features vary by account, region, and rollout. Always verify the live UI before relying on a capability.
 
 ## Quick start
 
-**Requirements:** Windows 10/11, Node.js 20+, npm, Google Chrome, and a Meta account with access to Meta AI.
+**Requirements:** Windows 10/11, a Meta account with access to Meta AI, and either a paired Tunnel Dashboard Edge Browser MCP connection or Node.js 20+, npm, and Google Chrome for the fallback helpers.
 
 ```powershell
 git clone https://github.com/fluk1412114-afk/meta.git
@@ -29,7 +29,7 @@ node scripts/create-image.js "A warm minimalist coffee shop in a garden at sunri
 
 The image helper saves verified downloads to `%USERPROFILE%\\Pictures\\MetaAI-Generated` by default.
 
-## Install the Skill
+## Browser control\n\nThe preferred browser transport is the Microsoft Edge extension connected to the Tunnel Dashboard MCP Bridge. This integration is maintained separately in [Tunnel Dashboard](https://github.com/fluk1412114-afk/tunnel-dashboard); install/pair the extension and grant Meta AI site access before invoking the Skill. The Skill checks `browser_status` and uses Edge MCP only when connected. If those tools are unavailable, the existing dedicated Chrome CDP/Playwright path remains available. See [browser-control.md](references/browser-control.md) for transport selection and safety rules.\n\n## Install the Skill
 
 Cloning the repository does not automatically register the Skill with Codex. To install it for the current Windows user:
 
@@ -53,7 +53,7 @@ See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.m
 |---|---|
 | `SKILL.md` | Main agent instructions and routing |
 | `agents/openai.yaml` | Skill display metadata and implicit invocation |
-| `references/` | Workflow guides and capability verification |
+| `references/` | Workflow guides, browser control, and capability verification |\n| `references/browser-control.md` | Edge Browser MCP preferred transport and Chrome fallback rules |
 | `scripts/launch-meta-cdp.js` | Launch/reuse dedicated Chrome CDP profile |
 | `scripts/find-cdp-endpoint.js` | Verify the dedicated local CDP endpoint |
 | `scripts/connect-meta-ai.js` | Connection diagnostic |
@@ -61,7 +61,7 @@ See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.m
 
 ## Security notes
 
-- The browser helper uses a dedicated profile at `%LOCALAPPDATA%\\MetaAI-CDP-Profile`; do not use your everyday Chrome profile.
+- Edge Browser MCP requires the separately installed and paired Tunnel Dashboard extension/Bridge.\n- The Chrome fallback uses a dedicated profile at `%LOCALAPPDATA%\\MetaAI-CDP-Profile`; do not use your everyday Chrome profile.
 - Sign in manually. The scripts do not automate passwords, MFA, or CAPTCHA.
 - Never publish the browser profile, cookies, storage, credentials, or private downloads.
 - Keep CDP bound to the local machine. Do not expose the debugging port to a network.
