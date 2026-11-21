@@ -42,7 +42,7 @@ npm ci
 ```
 
 - Codex CLI / IDE: invoke with `$meta`.
-- ChatGPT Desktop with standalone Skills support: invoke with `@meta` after adding the Skill in that environment.
+- ChatGPT Desktop with standalone Skills support: add/import the folder only if the current Skills UI provides that flow, then invoke with `@meta`. Cloning this repo does not register it automatically.
 - Repository-scoped install: place the complete folder at `.agents/skills/meta/` in your project.
 
 See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.md) for prerequisites, setup order, workflows, security, troubleshooting, and updates.
