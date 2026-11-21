@@ -50,7 +50,22 @@ npm ci
 
 **ไม่ต้องรัน `npx playwright install`** สำหรับ workflow ปัจจุบัน เพราะสคริปต์เชื่อมต่อกับ Google Chrome ที่ติดตั้งอยู่แล้ว ไม่ได้ใช้ Playwright เปิด browser binary ของตัวเอง
 
-## 4. เชื่อมต่อ Microsoft Edge Browser MCP (แนะนำ)\n\nSkill `meta` จะเลือกใช้ Edge Browser MCP ก่อนเมื่อเครื่องมือ Browser MCP ปรากฏใน runtime และ `browser_status` ยืนยันว่า Extension เชื่อมต่ออยู่ โดยใช้เครื่องมือสำหรับดูแท็บ ตรวจหน้าเว็บ อ่านองค์ประกอบ และคลิก/พิมพ์ผ่าน UI ที่มองเห็นได้\n\nสิ่งที่ต้องเตรียมจากโปรเจกต์ Tunnel Dashboard แยกต่างหาก:\n\n1. ติดตั้งและเปิดใช้ Tunnel Dashboard MCP Bridge รุ่นที่มี Edge Browser MCP\n2. ติดตั้ง Edge Extension จากโฟลเดอร์ `remote-mcp-bridge/edge-extension` ด้วยเมนู **Load unpacked** ใน `edge://extensions`\n3. จับคู่ Extension กับ Bridge และอนุญาต Site access สำหรับ `https://www.meta.ai/` ผ่านหน้าต่างยืนยันของ Edge\n4. ตรวจว่าเครื่องมือ `browser_status` รายงานว่าเชื่อมต่อแล้ว และใช้ `browser_list_tabs` เพื่อยืนยันว่าแท็บ Meta AI ปรากฏ\n\nหากเครื่องมือ Browser MCP ยังไม่ปรากฏใน runtime หรือสถานะไม่เชื่อมต่อ อย่าสมมติว่า Edge พร้อมใช้งาน ให้ใช้ Chrome CDP fallback ในหัวข้อถัดไปแทน การติดตั้ง Skill `meta` เพียงอย่างเดียวไม่ได้ติดตั้งหรือเปิดใช้งาน Extension/Bridge\n\n**ข้อควรระวัง:** อย่าเปิดเผย pairing token ในแชตหรือ commit ลง Git และอย่ารีสตาร์ต Tunnel Client/MCP Bridge โดยไม่มีการอนุญาตจากผู้ใช้\n\n## 5. เปิด Chrome โปรไฟล์เฉพาะสำหรับ Meta AI (Fallback)
+## 4. เชื่อมต่อ Microsoft Edge Browser MCP (แนะนำ)
+
+Skill `meta` จะเลือกใช้ Edge Browser MCP ก่อนเมื่อเครื่องมือ Browser MCP ปรากฏใน runtime และ `browser_status` ยืนยันว่า Extension เชื่อมต่ออยู่ โดยใช้เครื่องมือสำหรับดูแท็บ ตรวจหน้าเว็บ อ่านองค์ประกอบ และคลิก/พิมพ์ผ่าน UI ที่มองเห็นได้
+
+สิ่งที่ต้องเตรียมจากโปรเจกต์ Tunnel Dashboard แยกต่างหาก:
+
+1. ติดตั้งและเปิดใช้ Tunnel Dashboard MCP Bridge รุ่นที่มี Edge Browser MCP
+2. ติดตั้ง Edge Extension จากโฟลเดอร์ `remote-mcp-bridge/edge-extension` ด้วยเมนู **Load unpacked** ใน `edge://extensions`
+3. จับคู่ Extension กับ Bridge และอนุญาต Site access สำหรับ `https://www.meta.ai/` ผ่านหน้าต่างยืนยันของ Edge
+4. ตรวจว่าเครื่องมือ `browser_status` รายงานว่าเชื่อมต่อแล้ว และใช้ `browser_list_tabs` เพื่อยืนยันว่าแท็บ Meta AI ปรากฏ
+
+หากเครื่องมือ Browser MCP ยังไม่ปรากฏใน runtime หรือสถานะไม่เชื่อมต่อ อย่าสมมติว่า Edge พร้อมใช้งาน ให้ใช้ Chrome CDP fallback ในหัวข้อถัดไปแทน การติดตั้ง Skill `meta` เพียงอย่างเดียวไม่ได้ติดตั้งหรือเปิดใช้งาน Extension/Bridge
+
+**ข้อควรระวัง:** อย่าเปิดเผย pairing token ในแชตหรือ commit ลง Git และอย่ารีสตาร์ต Tunnel Client/MCP Bridge โดยไม่มีการอนุญาตจากผู้ใช้
+
+## 5. เปิด Chrome โปรไฟล์เฉพาะสำหรับ Meta AI (Fallback)
 
 รัน:
 
