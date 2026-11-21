@@ -29,7 +29,11 @@ node scripts/create-image.js "A warm minimalist coffee shop in a garden at sunri
 
 The image helper saves verified downloads to `%USERPROFILE%\\Pictures\\MetaAI-Generated` by default.
 
-## Browser control\n\nThe preferred browser transport is the Microsoft Edge extension connected to the Tunnel Dashboard MCP Bridge. This integration is maintained separately in [Tunnel Dashboard](https://github.com/fluk1412114-afk/tunnel-dashboard); install/pair the extension and grant Meta AI site access before invoking the Skill. The Skill checks `browser_status` and uses Edge MCP only when connected. If those tools are unavailable, the existing dedicated Chrome CDP/Playwright path remains available. See [browser-control.md](references/browser-control.md) for transport selection and safety rules.\n\n## Install the Skill
+## Browser control
+
+The preferred browser transport is the Microsoft Edge extension connected to the Tunnel Dashboard MCP Bridge. This integration is maintained separately in [Tunnel Dashboard](https://github.com/fluk1412114-afk/tunnel-dashboard); install/pair the extension and grant Meta AI site access before invoking the Skill. The Skill checks `browser_status` and uses Edge MCP only when connected. If those tools are unavailable, the existing dedicated Chrome CDP/Playwright path remains available. See [browser-control.md](references/browser-control.md) for transport selection and safety rules.
+
+## Install the Skill
 
 Cloning the repository does not automatically register the Skill with Codex. To install it for the current Windows user:
 
@@ -53,7 +57,8 @@ See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.m
 |---|---|
 | `SKILL.md` | Main agent instructions and routing |
 | `agents/openai.yaml` | Skill display metadata and implicit invocation |
-| `references/` | Workflow guides, browser control, and capability verification |\n| `references/browser-control.md` | Edge Browser MCP preferred transport and Chrome fallback rules |
+| `references/` | Workflow guides, browser control, and capability verification |
+| `references/browser-control.md` | Edge Browser MCP preferred transport and Chrome fallback rules |
 | `scripts/launch-meta-cdp.js` | Launch/reuse dedicated Chrome CDP profile |
 | `scripts/find-cdp-endpoint.js` | Verify the dedicated local CDP endpoint |
 | `scripts/connect-meta-ai.js` | Connection diagnostic |
@@ -61,7 +66,8 @@ See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.m
 
 ## Security notes
 
-- Edge Browser MCP requires the separately installed and paired Tunnel Dashboard extension/Bridge.\n- The Chrome fallback uses a dedicated profile at `%LOCALAPPDATA%\\MetaAI-CDP-Profile`; do not use your everyday Chrome profile.
+- Edge Browser MCP requires the separately installed and paired Tunnel Dashboard extension/Bridge.
+- The Chrome fallback uses a dedicated profile at `%LOCALAPPDATA%\\MetaAI-CDP-Profile`; do not use your everyday Chrome profile.
 - Sign in manually. The scripts do not automate passwords, MFA, or CAPTCHA.
 - Never publish the browser profile, cookies, storage, credentials, or private downloads.
 - Keep CDP bound to the local machine. Do not expose the debugging port to a network.
