@@ -121,7 +121,8 @@ Codex จะค้นหา Skills ใน `.agents/skills` ของโปรเ
 ### เรียกใช้งาน
 
 - Codex CLI / IDE: พิมพ์ `$meta` ตามด้วยคำสั่ง เช่น `$meta ช่วยค้นหาไอเดียโพสต์ที่กำลังเป็นกระแส`
-- ChatGPT Desktop ที่รองรับ standalone Skills: เรียก Skill ด้วย `@meta` หรือเลือกจาก Skills UI เมื่อ Skill ถูกเพิ่มในสภาพแวดล้อมนั้นแล้ว
+- ChatGPT Desktop ที่รองรับ standalone Skills: เปิด **Skills** ใน Sidebar เพื่อตรวจดู Skills ที่มีในสภาพแวดล้อมนั้น หากมีขั้นตอน Add/Import ให้เพิ่มโฟลเดอร์ Skill นี้ตามตัวเลือกที่ UI รองรับ จากนั้นเรียกด้วย `@meta` หรือเลือกจาก Skills UI
+- หากไม่มีตัวเลือกเพิ่ม Skill จากโฟลเดอร์หรือ Repository ใน UI เวอร์ชันที่ใช้อยู่ ให้ถือว่ายังไม่ได้ติดตั้ง อย่าสมมติว่าการ Clone GitHub ทำให้ ChatGPT โหลด Skill ให้เอง
 
 การติดตั้งไฟล์ใน Repository นี้ไม่ได้ทำให้ Skill ปรากฏใน ChatGPT Web หรือ Mobile โดยอัตโนมัติ
 
