@@ -76,7 +76,10 @@ If Meta AI cannot perform a step, do not pretend it can. Offer the closest usefu
 ## Reliability and reporting
 
 - Treat the live Meta AI interface as the source of truth for current capabilities, modes, limits, and controls.
+- Use the public Meta AI landing page as a discovery index for advertised capability families and localized labels, but verify each capability again in the authenticated session before using it; landing-page examples are promotional samples, not live account data or entitlement guarantees.
 - A prompt being submitted is not proof that generation finished. A visible result is not proof it downloaded. Verify each stage independently.
 - Never invent post content, author identity, engagement counts, image/video dimensions, download paths, or completion status.
 - If a workflow is blocked, report the exact blocker and preserve completed work. Do not loop retries indefinitely.
 - Respond in the user's language (normally Thai). Keep explanations concise and include links or saved file locations only when verified.
+
+
