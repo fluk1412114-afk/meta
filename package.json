@@ -1,12 +1,19 @@
 {
   "name": "meta-assets",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Standalone Meta AI image and motion asset workflow for CapCut and Remotion",
+  "type": "module",
+  "description": "Meta AI Agent Skill with isolated multi-browser Ghost Mode automation",
   "scripts": {
+    "ghost": "node scripts/ghost-launcher.js",
+    "ghost:watch": "node scripts/viewer-server.js",
+    "ghost:list": "node scripts/ghost-launcher.js list-browsers",
     "create-image": "node scripts/create-image.js"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "playwright": "^1.65.1"
+    "playwright-core": "^1.65.1"
   }
 }

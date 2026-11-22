@@ -1,44 +1,89 @@
 # meta — Meta AI Agent Skill
 
-An adaptive Agent Skill for using Meta AI through its website for social discovery, research, planning, image/video workflows, and multi-step tasks. It prefers Microsoft Edge Browser MCP through the separate Tunnel Dashboard extension/Bridge, with the existing dedicated Windows Chrome CDP/Playwright helpers retained as a fallback.
+An adaptive Agent Skill for using Meta AI through its website for social discovery, research, planning, image/video workflows, and multi-step tasks. Ghost Mode is the default browser transport: it launches isolated browser profiles headlessly and does not interfere with the user's desktop input or active window.
 
 > This repository is a community-maintained skill and automation helper, not an official Meta product or client. Meta AI features vary by account, region, and rollout. Always verify the live UI before relying on a capability.
 
 ## Quick start
 
-**Requirements:** Windows 10/11, a Meta account with access to Meta AI, and either a paired Tunnel Dashboard Edge Browser MCP connection or Node.js 20+, npm, and Google Chrome for the fallback helpers.
+**Requirements:** Windows 10/11, Node.js 20+, npm, and at least one supported browser installed.
 
 ```powershell
 git clone https://github.com/fluk1412114-afk/meta.git
 cd meta
 npm ci
-node scripts/launch-meta-cdp.js
 ```
 
-On first launch, sign in manually in the dedicated Chrome window. Then, from another PowerShell window:
+Start Ghost Mode with the default Chrome browser:
 
 ```powershell
-node scripts/connect-meta-ai.js
+node scripts/ghost-launcher.js
+```
+
+Choose another installed browser:
+
+```powershell
+node scripts/ghost-launcher.js --browser chrome
+node scripts/ghost-launcher.js --browser edge
+node scripts/ghost-launcher.js --browser brave
+node scripts/ghost-launcher.js --browser firefox
+```
+
+Ghost Mode is headless by default. To show the browser window explicitly:
+
+```powershell
+node scripts/ghost-launcher.js --browser edge --headed
+```
+
+Sign in manually if Meta AI asks. Passwords, MFA/OTP, CAPTCHA, and verification are never automated. The browser profile is isolated per browser under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>`.
+
+Connect to Meta AI:
+
+```powershell
+node scripts/connect-meta-ai.js --browser edge
 ```
 
 Generate an image:
 
 ```powershell
-node scripts/create-image.js "A warm minimalist coffee shop in a garden at sunrise"
+node scripts/create-image.js "A warm minimalist coffee shop in a garden at sunrise" --browser brave
 ```
 
-The image helper saves verified downloads to `%USERPROFILE%\\Pictures\\MetaAI-Generated` by default.
+Watch the live browser (read-only):
 
-## Browser control
+```powershell
+node scripts/viewer-server.js --browser edge
+# Open http://127.0.0.1:9229/viewer
+```
 
-The preferred browser transport is the Microsoft Edge extension connected to the Tunnel Dashboard MCP Bridge. This integration is maintained separately in [Tunnel Dashboard](https://github.com/fluk1412114-afk/tunnel-dashboard); install/pair the extension and grant Meta AI site access before invoking the Skill. The Skill checks `browser_status` and uses Edge MCP only when connected. If those tools are unavailable, the existing dedicated Chrome CDP/Playwright path remains available. See [browser-control.md](references/browser-control.md) for transport selection and safety rules.
+Manage browsers:
+
+```powershell
+node scripts/ghost-launcher.js list-browsers
+node scripts/ghost-launcher.js stop --browser edge
+```
+
+If the requested browser is unavailable, the launcher falls back in this order: Chrome → Edge → Brave → Firefox, and logs the selected browser.
+
+## Browser and safety model
+
+- Chrome, Edge, and Brave use Playwright Chromium over CDP; Firefox uses Playwright's Firefox transport (not raw CDP); WebKit is experimental and macOS-only.
+- Debugging endpoints bind to `127.0.0.1` only, never `0.0.0.0`.
+- No pyautogui, pynput, robotjs, xdotool, OS-level mouse/keyboard, focus switching, or active-window manipulation.
+- Do not use the user's everyday browser profile. Each browser has a separate isolated profile.
+- The viewer is read-only. Chromium uses Page.startScreencast; Firefox/WebKit use screenshot polling every 800 ms.
+- Never publish browser profiles, cookies, credentials, tokens, or local storage.
+- Before any public post, message, purchase, payment, share, follow, comment, or account change, obtain explicit confirmation in chat immediately before submission.
+- Sign-in is manual only. Never automate passwords, MFA, CAPTCHA, or verification.
+
+See [references/browser-control.md](references/browser-control.md) and [references/ghost-mode.md](references/ghost-mode.md) for architecture, ports, limitations, and extension guidance.
 
 ## Install the Skill
 
 Cloning the repository does not automatically register the Skill with Codex. To install it for the current Windows user:
 
 ```powershell
-$skills = Join-Path $HOME ".agents\\skills"
+$skills = Join-Path $HOME ".agents\skills"
 New-Item -ItemType Directory -Force -Path $skills | Out-Null
 git clone https://github.com/fluk1412114-afk/meta.git (Join-Path $skills "meta")
 Set-Location (Join-Path $skills "meta")
@@ -46,7 +91,7 @@ npm ci
 ```
 
 - Codex CLI / IDE: invoke with `$meta`.
-- ChatGPT Desktop with standalone Skills support: add/import the folder only if the current Skills UI provides that flow, then invoke with `@meta`. Cloning this repo does not register it automatically.
+- ChatGPT Desktop with standalone Skills support: import the folder only if the current Skills UI provides that flow, then invoke with `@meta`.
 - Repository-scoped install: place the complete folder at `.agents/skills/meta/` in your project.
 
 See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.md) for prerequisites, setup order, workflows, security, troubleshooting, and updates.
@@ -56,22 +101,14 @@ See the [complete Thai installation and usage guide](docs/INSTALL-AND-USAGE-TH.m
 | Path | Purpose |
 |---|---|
 | `SKILL.md` | Main agent instructions and routing |
-| `agents/openai.yaml` | Skill display metadata and implicit invocation |
-| `references/` | Workflow guides, browser control, and capability verification |
-| `references/browser-control.md` | Edge Browser MCP preferred transport and Chrome fallback rules |
-| `scripts/launch-meta-cdp.js` | Launch/reuse dedicated Chrome CDP profile |
-| `scripts/find-cdp-endpoint.js` | Verify the dedicated local CDP endpoint |
-| `scripts/connect-meta-ai.js` | Connection diagnostic |
+| `scripts/browser-profiles.js` | Browser registry, executable detection, profile isolation, fallback |
+| `scripts/ghost-launcher.js` | Headless browser launcher, stop, and list commands |
+| `scripts/ghost-controller.js` | Playwright connections and safe locator helpers |
+| `scripts/viewer-server.js` | Read-only loopback live viewer |
+| `scripts/connect-meta-ai.js` | Meta AI connection diagnostic |
 | `scripts/create-image.js` | Image generation and download helper |
-
-## Security notes
-
-- Edge Browser MCP requires the separately installed and paired Tunnel Dashboard extension/Bridge.
-- The Chrome fallback uses a dedicated profile at `%LOCALAPPDATA%\\MetaAI-CDP-Profile`; do not use your everyday Chrome profile.
-- Sign in manually. The scripts do not automate passwords, MFA, or CAPTCHA.
-- Never publish the browser profile, cookies, storage, credentials, or private downloads.
-- Keep CDP bound to the local machine. Do not expose the debugging port to a network.
-- Public posting, messaging, purchases, and account-setting changes require explicit user authorization and appropriate confirmation.
+| `references/ghost-mode.md` | Ghost Mode architecture and extension guide |
+| `references/browser-control.md` | Browser transports and safety rules |
 
 ## License
 
