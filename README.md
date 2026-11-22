@@ -29,13 +29,21 @@ node scripts/ghost-launcher.js --browser brave
 node scripts/ghost-launcher.js --browser firefox
 ```
 
+Firefox requires the Playwright-managed Firefox engine once per machine:
+
+```powershell
+npx playwright-core install firefox
+```
+
+On macOS, experimental WebKit can be installed with `npx playwright-core install webkit` and started with `--browser webkit`. WebKit is not included in automatic fallback.
+
 Ghost Mode is headless by default. To show the browser window explicitly:
 
 ```powershell
 node scripts/ghost-launcher.js --browser edge --headed
 ```
 
-Sign in manually if Meta AI asks. Passwords, MFA/OTP, CAPTCHA, and verification are never automated. The browser profile is isolated per browser under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>`.
+If manual sign-in is required, stop the current Ghost process and restart with `--headed`; complete sign-in yourself, then restart without `--headed` for hidden operation. Passwords, MFA/OTP, CAPTCHA, and verification are never automated. The browser profile is isolated per browser under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>`.
 
 Connect to Meta AI:
 

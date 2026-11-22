@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import { firefox, webkit } from 'playwright-core';
 
 const platform = process.platform;
 const localBase = process.env.LOCALAPPDATA ||
@@ -65,6 +66,14 @@ function findOnPath(command) {
   }
 }
 
+function playwrightExecutable(engine) {
+  try {
+    return (engine === 'webkit' ? webkit : firefox).executablePath();
+  } catch {
+    return null;
+  }
+}
+
 export function getBrowserProfile(name) {
   const key = String(name || 'chrome').toLowerCase();
   const definition = definitions[key];
@@ -79,10 +88,18 @@ export function getBrowserProfile(name) {
     executablePath = candidates.find(candidate => candidate && fs.existsSync(candidate)) ||
       findOnPath(definition.executable.replace(/\.exe$/i, ''));
   }
+  const playwrightExecutablePath = definition.engine ? playwrightExecutable(definition.engine) : null;
+  const engineInstalled = !definition.engine ||
+    Boolean(playwrightExecutablePath && fs.existsSync(playwrightExecutablePath));
+  const installed = definition.engine === 'webkit'
+    ? platform === 'darwin' && engineInstalled
+    : Boolean(executablePath && engineInstalled);
   return {
-    ...definition, id: key, executablePath,
-    installed: definition.engine === 'webkit' ? platform === 'darwin' : Boolean(executablePath),
-    profilePath: path.join(PROFILE_ROOT, key)
+    ...definition, id: key, executablePath, playwrightExecutablePath, installed,
+    profilePath: path.join(PROFILE_ROOT, key),
+    reason: definition.engine && !engineInstalled
+      ? `Install the Playwright ${definition.engine} browser with npx playwright-core install ${definition.engine}.`
+      : null
   };
 }
 

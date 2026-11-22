@@ -6,6 +6,7 @@ Ghost Mode is the default browser transport for this Skill. It operates a separa
 
 - Profiles are stored at `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. macOS/Linux use the platform's local application-data directory with the same `MetaAI-CDP-Profile/<browser>` layout.
 - Chrome, Edge, and Brave use their own executable, port, and profile. Firefox and experimental macOS WebKit use Playwright's browser-server transport, not raw CDP.
+- Firefox automation requires the Playwright-managed engine installed with `npx playwright-core install firefox`. WebKit requires `npx playwright-core install webkit` and is macOS-only.
 - All debug and Playwright endpoints bind to `127.0.0.1`. Never expose them on `0.0.0.0`, a LAN address, or a public interface.
 - Chromium defaults to `--headless=new`; Firefox/WebKit default to Playwright `headless: true`. Headed mode is opt-in with `--headed`.
 - Browser interactions use Playwright locators and browser protocol input. No OS-level mouse/keyboard injection, desktop automation, or focus switching is used.

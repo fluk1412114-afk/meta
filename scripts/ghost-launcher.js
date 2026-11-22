@@ -59,6 +59,7 @@ async function runFirefoxWorker() {
   const state = getProfileStatePath(browser);
   const server = await type.launchServer({
     host: '127.0.0.1', port, headless: !headed,
+    executablePath: browser.playwrightExecutablePath,
     args: browser.engine === 'firefox' ? ['-profile', browser.profilePath] : []
   });
   fs.writeFileSync(state.endpoint, server.wsEndpoint(), { mode: 0o600 });
@@ -115,7 +116,7 @@ export async function launchGhost({ browser = 'chrome', headed = false, port } =
     `--user-data-dir=${selected.profilePath}`,
     '--no-first-run', '--no-default-browser-check',
     '--disable-background-networking', '--disable-sync',
-    '--password-store=basic', '--disable-features=Translate'
+    '--disable-features=Translate'
   ];
   if (!headed) executableArgs.unshift('--headless=new');
   const child = spawn(selected.executablePath, executableArgs, {
