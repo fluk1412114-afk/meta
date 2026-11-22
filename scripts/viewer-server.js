@@ -3,6 +3,8 @@ import { connectGhost } from './ghost-controller.js';
 
 const args = process.argv.slice(2);
 const arg = name => {
+  const inline = args.find(value => value.startsWith(`${name}=`));
+  if (inline) return inline.slice(name.length + 1);
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
@@ -34,7 +36,7 @@ body{margin:0;background:#111827;color:#e5e7eb;font:14px system-ui}header{paddin
 <header><span>Browser: <b id="browser">connecting</b></span><span>URL: <b id="url">—</b></span><span>Status: <b id="status">starting</b></span><small>Read-only viewer · 127.0.0.1 only</small></header>
 <main><img src="/stream" alt="Live browser screenshot"></main>
 <script>
-async function refresh(){try{const r=await fetch('/status');const s=await r.json();browser.textContent=s.browser;url.textContent=s.url;status.textContent=s.status}catch(e){status.textContent='disconnected'}}
+async function refresh(){try{const r=await fetch('/status');const s=await r.json();document.getElementById('browser').textContent=s.browser;document.getElementById('url').textContent=s.url;document.getElementById('status').textContent=s.status}catch(e){document.getElementById('status').textContent='disconnected'}}
 refresh();setInterval(refresh,1000);
 </script></html>`;
 

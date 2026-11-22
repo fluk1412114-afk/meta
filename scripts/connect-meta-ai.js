@@ -1,8 +1,11 @@
 import { connectGhost, waitForMetaAI } from './ghost-controller.js';
 
 const args = process.argv.slice(2);
+const inlineBrowser = args.find(value => value.startsWith('--browser='));
 const browserIndex = args.indexOf('--browser');
-const browser = browserIndex >= 0 ? args[browserIndex + 1] : 'chrome';
+const browser = inlineBrowser
+  ? inlineBrowser.slice('--browser='.length)
+  : browserIndex >= 0 ? args[browserIndex + 1] : 'chrome';
 let connection;
 
 try {

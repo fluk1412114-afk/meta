@@ -31,17 +31,23 @@ Do not ask the user to choose an internal mode when their intent is clear. Ask o
 
 ## Ghost Mode commands
 
+Interpret these Skill commands as the following local PowerShell commands. Preserve the selected browser for watch/stop when it is known; otherwise use Chrome.
+
+| Skill command | Local command |
+|---|---|
+| `$meta ghost start --browser=edge` | `node scripts/ghost-launcher.js --browser edge` |
+| `$meta ghost watch` | `node scripts/viewer-server.js --browser <selected-browser>` |
+| `$meta ghost stop` | `node scripts/ghost-launcher.js stop --browser <selected-browser>` |
+| `$meta ghost list-browsers` | `node scripts/ghost-launcher.js list-browsers` |
+
+Equivalent direct commands:
+
 ```powershell
-# Start hidden by default (Chrome is the default browser)
 node scripts/ghost-launcher.js
 node scripts/ghost-launcher.js --browser edge
 node scripts/ghost-launcher.js --browser brave
 node scripts/ghost-launcher.js --browser firefox
-
-# Explicitly visible browser, only when requested
 node scripts/ghost-launcher.js --browser edge --headed
-
-# Watch, stop, and list installed browsers
 node scripts/viewer-server.js --browser edge
 node scripts/ghost-launcher.js stop --browser edge
 node scripts/ghost-launcher.js list-browsers

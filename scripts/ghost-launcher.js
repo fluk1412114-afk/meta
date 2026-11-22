@@ -8,6 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const args = process.argv.slice(2);
 const valueAfter = (flag, fallback) => {
+  const inline = args.find(value => value.startsWith(`${flag}=`));
+  if (inline) return inline.slice(flag.length + 1);
   const index = args.indexOf(flag);
   return index >= 0 && args[index + 1] ? args[index + 1] : fallback;
 };

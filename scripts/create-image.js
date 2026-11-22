@@ -3,14 +3,27 @@ import path from 'node:path';
 import { connectGhost, safeFill, safeClick, waitForMetaAI } from './ghost-controller.js';
 
 const args = process.argv.slice(2);
-const prompt = args.find(value => !value.startsWith('--'));
 const browserIndex = args.indexOf('--browser');
-const browser = browserIndex >= 0 ? args[browserIndex + 1] : 'chrome';
+const inlineBrowser = args.find(value => value.startsWith('--browser='));
+const browser = inlineBrowser
+  ? inlineBrowser.slice('--browser='.length)
+  : browserIndex >= 0 ? args[browserIndex + 1] : 'chrome';
 const outputIndex = args.indexOf('--output');
-const outputDir = outputIndex >= 0 ? args[outputIndex + 1] :
-  path.join(process.env.USERPROFILE || process.env.HOME, 'Pictures', 'MetaAI-Generated');
+const inlineOutput = args.find(value => value.startsWith('--output='));
+const outputDir = inlineOutput
+  ? inlineOutput.slice('--output='.length)
+  : outputIndex >= 0 ? args[outputIndex + 1]
+    : path.join(process.env.USERPROFILE || process.env.HOME, 'Pictures', 'MetaAI-Generated');
+const skipped = new Set(['--browser', '--output']);
+const promptParts = args.filter((value, index) => {
+  if (skipped.has(value)) return false;
+  if (index > 0 && (args[index - 1] === '--browser' || args[index - 1] === '--output')) return false;
+  if (value.startsWith('--browser=') || value.startsWith('--output=')) return false;
+  return true;
+});
+const prompt = promptParts.join(' ');
 
-if (!prompt || !prompt.trim()) {
+if (!prompt.trim()) {
   console.error('Usage: node scripts/create-image.js "image prompt" [--browser chrome|edge|brave|firefox] [--output folder]');
   process.exit(2);
 }
