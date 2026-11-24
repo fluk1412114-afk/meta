@@ -54,3 +54,33 @@ All CDP and Playwright endpoints bind to `127.0.0.1`, never `0.0.0.0`. Do not ex
 ## Optional Edge Browser MCP
 
 The separately installed Tunnel Dashboard Edge extension/Bridge may still be used by other workflows when its runtime tools are available and the user has paired it. It is independent of Ghost Mode and does not share Ghost Mode's Playwright connection or profile. Do not silently switch transports mid-task.
+
+## Tunnel Dashboard Edge Browser MCP (optional attached-browser transport)
+
+Use this integration when the user explicitly wants to control their already-open Microsoft Edge session, inspect existing tabs, or use Tunnel Dashboard (TD) browser tools. It is separate from Ghost Mode and must not be treated as a Playwright CDP endpoint.
+
+### Connection and verification
+
+- The local Edge Browser MCP Bridge listens on `http://127.0.0.1:38471`. Keep it loopback-only; never expose it on a LAN, public interface, reverse proxy, or tunnel.
+- Pair the TD Edge Control extension with the local Bridge using TD's pairing flow. Never print, paste into chat, commit, log, or otherwise disclose the pairing token.
+- If the extension reports `origin_not_allowed:""`, the request may have no Origin header. Diagnose the actual request and runtime version. A missing Origin may be accepted only for a loopback request that also presents the correct pairing token; if an Origin is present, validate that it is the expected extension origin. Never allow arbitrary origins, disable token checks, or bind the Bridge beyond loopback.
+- After changing Bridge code, restart the TD application/Bridge process so the running worker loads the updated code, then reload the Edge extension from `edge://extensions` and reconnect.
+- “Connected to local MCP Bridge” is only a transport-level signal. Verify actual browser operations before reporting the integration ready.
+
+### Browser-control smoke test
+
+When TD browser tools are available, run a read-only test in this order:
+
+1. `browser_status`: require `connected: true` and a recent `lastSeenAt`.
+2. `browser_list_tabs`: confirm the extension returns tab IDs, titles, and URLs.
+3. `browser_get_page` on a returned tab ID: confirm title, URL, and visible page text are readable.
+4. `browser_get_elements` on the same tab: confirm interactive controls can be inspected.
+5. Use `browser_screenshot` only when visual verification is useful. Use navigation/click/type only when needed for the user's requested task.
+
+Do not infer success merely because an MCP tool returned without an error. Inspect the resulting page/state. Start with read-only checks; consequential actions remain subject to explicit-confirmation rules. If a test fails, report the exact failed operation and stop rather than repeatedly reconnecting or weakening authorization.
+
+### Transport selection
+
+- Ghost Mode remains the default isolated transport and is preferred for autonomous Meta AI workflows.
+- Use Tunnel Dashboard Edge Browser MCP only when the user asks to use the existing Edge session or when that attached session is materially required.
+- Do not silently switch between Ghost Mode and the attached Edge session during a task.
