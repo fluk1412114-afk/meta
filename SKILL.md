@@ -55,7 +55,7 @@ node scripts/ghost-launcher.js stop --browser edge
 node scripts/ghost-launcher.js list-browsers
 ```
 
-The default browser is Edge. Each browser uses a separate profile under `%LOCALAPPDATA%\MetaAI-Ghost-Profile\<browser>` on Windows. Browser automation endpoints bind to `127.0.0.1` only. The viewer is read-only at `http://127.0.0.1:9229/viewer`; query strings and URL fragments are not displayed.
+The default browser is Edge. Each browser uses a separate profile under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. Browser automation endpoints bind to `127.0.0.1` only. The viewer is read-only at `http://127.0.0.1:9229/viewer`; query strings and URL fragments are not displayed.
 
 Ghost Mode is headless by default. Use `--headed` only when the user needs to complete a manual sign-in or inspect the isolated browser window. A headed Ghost window is still a separate process with a separate profile; it does not reuse the user's everyday browser session.
 
