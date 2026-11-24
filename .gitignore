@@ -16,6 +16,9 @@ credentials/
 **/Chrome/
 **/Chrome-Profile/
 **/MetaAI-CDP-Profile/
+**/MetaAI-Ghost-Profile/
+**/.ghost.pid
+**/.ghost-endpoint
 **/chrome-profile/
 **/user-data-dir/
 **/Default/Cookies

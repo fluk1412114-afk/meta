@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { resolveBrowser, getProfileStatePath, listBrowsers } from './browser-profiles.js';
+import { resolveBrowser, getBrowserProfile, getProfileStatePath, listBrowsers, isManagedGhostProcess } from './browser-profiles.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -36,10 +36,14 @@ function writePid(state, pid) {
   fs.writeFileSync(state.pid, String(pid), { mode: 0o600 });
 }
 
+function writeEndpoint(state, endpoint) {
+  fs.writeFileSync(state.endpoint, endpoint, { mode: 0o600 });
+}
+
 function startFirefoxWorker(browser, headed, port) {
   const state = getProfileStatePath(browser);
   const child = spawn(process.execPath, [__filename, '--worker', '--browser', browser.id,
-    '--headed', String(headed), '--port', String(port)], {
+    '--headed', String(headed), '--port', String(port), '--profile-path', browser.profilePath], {
     detached: true, stdio: 'ignore', windowsHide: true,
     env: { ...process.env, META_GHOST_PROFILE: browser.profilePath }
   });
@@ -52,9 +56,13 @@ async function runFirefoxWorker() {
   const browserName = valueAfter('--browser', 'firefox');
   const port = Number(valueAfter('--port', '9226'));
   const headed = valueAfter('--headed', 'false') === 'true';
-  const browser = resolveBrowser(browserName);
-  if (browser.engine !== 'firefox' && browser.engine !== 'webkit') {
+  const profilePath = valueAfter('--profile-path', '');
+  const browser = getBrowserProfile(browserName);
+  if (!['firefox', 'webkit'].includes(browser.engine)) {
     throw new Error('Worker mode is reserved for Playwright Firefox/WebKit.');
+  }
+  if (!profilePath || path.resolve(profilePath) !== path.resolve(browser.profilePath)) {
+    throw new Error('Worker profile path does not match the registered isolated profile.');
   }
   const { firefox, webkit } = await import('playwright-core');
   const type = browser.engine === 'webkit' ? webkit : firefox;
@@ -64,7 +72,7 @@ async function runFirefoxWorker() {
     executablePath: browser.playwrightExecutablePath,
     args: browser.engine === 'firefox' ? ['-profile', browser.profilePath] : []
   });
-  fs.writeFileSync(state.endpoint, server.wsEndpoint(), { mode: 0o600 });
+  writeEndpoint(state, server.wsEndpoint());
   const shutdown = async () => {
     try { await server.close(); } finally {
       for (const file of [state.pid, state.endpoint]) {
@@ -78,11 +86,11 @@ async function runFirefoxWorker() {
   await new Promise(() => {});
 }
 
-export async function launchGhost({ browser = 'chrome', headed = false, port } = {}) {
+export async function launchGhost({ browser = 'edge', headed = false, port } = {}) {
   const selected = resolveBrowser(browser);
   const actualPort = Number(port || selected.port);
   if (!Number.isInteger(actualPort) || actualPort < 1024 || actualPort > 65535) {
-    throw new Error('CDP/Playwright port must be an integer from 1024 to 65535.');
+    throw new Error('Browser transport port must be an integer from 1024 to 65535.');
   }
   if (portIsBusy(actualPort)) {
     if (selected.engine !== 'firefox' && selected.engine !== 'webkit' && await chromiumReady(actualPort)) {
@@ -103,7 +111,7 @@ export async function launchGhost({ browser = 'chrome', headed = false, port } =
       if (fs.existsSync(state.endpoint)) {
         const endpoint = fs.readFileSync(state.endpoint, 'utf8').trim();
         if (endpoint.startsWith('ws://127.0.0.1:')) {
-          console.log(`Ghost Browser: ${selected.id} on http://127.0.0.1:${actualPort} (Playwright transport)`);
+          console.log(`Ghost Browser: ${selected.id} on 127.0.0.1:${actualPort} (Playwright transport)`);
           return { browser: selected.id, port: actualPort, endpoint, profilePath: selected.profilePath };
         }
       }
@@ -128,16 +136,19 @@ export async function launchGhost({ browser = 'chrome', headed = false, port } =
   writePid(state, child.pid);
   for (let attempt = 0; attempt < 300; attempt++) {
     if (await chromiumReady(actualPort)) {
-      console.log(`Ghost Browser: ${selected.id} on http://127.0.0.1:${actualPort}`);
-      return { browser: selected.id, port: actualPort, endpoint: `http://127.0.0.1:${actualPort}`, profilePath: selected.profilePath };
+      const endpoint = `http://127.0.0.1:${actualPort}`;
+      writeEndpoint(state, endpoint);
+      console.log(`Ghost Browser: ${selected.id} on 127.0.0.1:${actualPort} (${headed ? 'headed' : 'headless'})`);
+      return { browser: selected.id, port: actualPort, endpoint, profilePath: selected.profilePath };
     }
     await sleep(100);
   }
-  throw new Error(`${selected.name} started but its local debugging endpoint did not become ready.`);
+  throw new Error(`${selected.name} started but its local browser endpoint did not become ready.`);
 }
 
-export async function stopGhost(browser = 'chrome') {
-  const selected = resolveBrowser(browser);
+export async function stopGhost(browser = 'edge') {
+  const selected = getBrowserProfile(browser);
+  if (!selected.installed) throw new Error(`Browser "${browser}" is not installed; refusing to resolve a different browser for stop.`);
   const state = getProfileStatePath(selected);
   if (!fs.existsSync(state.pid)) {
     console.log(`No Ghost process recorded for ${selected.id}.`);
@@ -145,14 +156,22 @@ export async function stopGhost(browser = 'chrome') {
   }
   const pid = Number(fs.readFileSync(state.pid, 'utf8').trim());
   if (!Number.isInteger(pid) || pid <= 0) throw new Error('Invalid Ghost PID file; refusing to terminate an unknown process.');
-  try {
-    if (process.platform === 'win32') {
-      execFileSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
-    } else {
-      process.kill(-pid, 'SIGTERM');
+  try { process.kill(pid, 0); }
+  catch (error) {
+    if (error.code === 'ESRCH') {
+      for (const file of [state.pid, state.endpoint]) { try { fs.unlinkSync(file); } catch {} }
+      console.log(`Removed stale Ghost state for ${selected.id}.`);
+      return false;
     }
-  } catch (error) {
-    if (error.code !== 'ESRCH' && error.status !== 128) throw error;
+    throw error;
+  }
+  if (!isManagedGhostProcess(pid, selected)) {
+    throw new Error('The recorded process does not identify the selected isolated profile. Refusing to terminate it; inspect the Ghost PID file manually.');
+  }
+  if (process.platform === 'win32') {
+    execFileSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+  } else {
+    process.kill(-pid, 'SIGTERM');
   }
   for (const file of [state.pid, state.endpoint]) {
     try { fs.unlinkSync(file); } catch {}
@@ -169,10 +188,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
       return;
     }
     if (has('stop')) {
-      await stopGhost(valueAfter('--browser', 'chrome'));
+      await stopGhost(valueAfter('--browser', 'edge'));
       return;
     }
-    const browser = valueAfter('--browser', 'chrome');
+    const browser = valueAfter('--browser', 'edge');
     await launchGhost({ browser, headed: has('--headed'), port: valueAfter('--port', undefined) });
   })().catch(error => {
     console.error('GHOST_LAUNCH_FAILED:', error.message);

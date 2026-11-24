@@ -33,7 +33,7 @@ For multi-step or quality-sensitive tasks, Meta AI leads the supported work on i
 
 This is a coordinated workflow, not a claim that Meta can invoke ChatGPT by itself. ChatGPT performs the review in the current conversation and relays follow-up instructions through the Meta AI website session.
 
-If a task requires the user's local computer, files, installed applications, command line, or an external deployment, escalate that step to Remote or another explicitly authorized tool. Meta cannot perform those local operations directly.
+If a task requires the user's local computer, files, installed applications, command line, or an external deployment, escalate that step to another explicitly authorized computer-access mechanism. Meta cannot perform those local operations directly.
 
 ## Agent boundaries
 

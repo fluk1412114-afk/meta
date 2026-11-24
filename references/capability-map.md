@@ -49,7 +49,7 @@ Distinguish these outcomes precisely:
 - **File downloaded** � the download completed and the file can be verified at an observed location.
 - **Website deployed** � the site is actually published to a reachable hosting destination; never infer this from generated code or a preview.
 
-Meta's website session does not grant access to the user's local filesystem, desktop, installed applications, or everyday browser. Use Remote or another authorized computer-access tool for local inspection, saving, editing, installation, execution, or deployment steps outside Meta AI. Do not claim those local steps are complete unless separately verified.
+Meta's website session does not grant access to the user's local filesystem, desktop, installed applications, or everyday browser. Use another explicitly authorized computer-access mechanism for local inspection, saving, editing, installation, execution, or deployment steps outside Meta AI. Do not claim those local steps are complete unless separately verified.
 
 ## Directly verified in this account
 
