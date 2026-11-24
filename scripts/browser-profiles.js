@@ -80,7 +80,11 @@ export function getBrowserProfile(name = 'edge') {
   const definition = definitions[key];
   if (!definition) throw new Error(`Unsupported browser "${key}". Choose: ${Object.keys(definitions).join(', ')}.`);
   if (definition.macOSOnly && platform !== 'darwin') {
-    return { ...definition, id: key, installed: false, reason: 'WebKit is experimental and macOS-only.' };
+    return {
+      ...definition, id: key, installed: false,
+      profilePath: path.join(PROFILE_ROOT, key),
+      reason: 'WebKit is experimental and macOS-only.'
+    };
   }
   let executablePath = null;
   if (definition.executable) {
