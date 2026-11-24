@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { resolveBrowser, getProfileStatePath } from './browser-profiles.js';
+import { resolveBrowser, getProfileStatePath, isManagedGhostProcess } from './browser-profiles.js';
 import { chromium, firefox, webkit } from 'playwright-core';
 
 const BLOCKED_AUTH = /password|passcode|one[- ]time|otp|verification[- ]code|captcha|two[- ]factor|mfa/i;
@@ -12,8 +12,9 @@ function requireLiveGhost(browser) {
   }
   const pid = Number(fs.readFileSync(state.pid, 'utf8').trim());
   if (!Number.isInteger(pid) || pid <= 0) throw new Error('Ghost PID state is invalid. Refusing to connect.');
-  try { process.kill(pid, 0); }
-  catch { throw new Error('The recorded Ghost process is not running. Start a fresh isolated browser session.'); }
+  if (!isManagedGhostProcess(pid, browser)) {
+    throw new Error('The recorded process does not belong to the selected isolated profile. Refusing to connect.');
+  }
   return fs.readFileSync(state.endpoint, 'utf8').trim();
 }
 
