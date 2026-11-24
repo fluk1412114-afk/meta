@@ -1,14 +1,15 @@
 {
   "name": "meta-assets",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "Meta AI Agent Skill with isolated multi-browser Ghost Mode automation",
   "scripts": {
-    "ghost": "node scripts/ghost-launcher.js",
-    "ghost:watch": "node scripts/viewer-server.js",
+    "ghost": "node scripts/ghost-launcher.js --browser edge",
+    "ghost:watch": "node scripts/viewer-server.js --browser edge",
     "ghost:list": "node scripts/ghost-launcher.js list-browsers",
-    "create-image": "node scripts/create-image.js"
+    "create-image": "node scripts/create-image.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
