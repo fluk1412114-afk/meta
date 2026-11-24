@@ -5,24 +5,35 @@ import { chromium, firefox, webkit } from 'playwright-core';
 const BLOCKED_AUTH = /password|passcode|one[- ]time|otp|verification[- ]code|captcha|two[- ]factor|mfa/i;
 const SENSITIVE_ACTION = /\b(post|publish|comment|share|message|send message|follow|purchase|buy|checkout|pay|payment|delete account|change password|account settings)\b/i;
 
-export async function connectGhost({ browser = 'chrome' } = {}) {
+function requireLiveGhost(browser) {
+  const state = getProfileStatePath(browser);
+  if (!fs.existsSync(state.pid) || !fs.existsSync(state.endpoint)) {
+    throw new Error(`Ghost ${browser.id} is not running. Start it with node scripts/ghost-launcher.js --browser=${browser.id}.`);
+  }
+  const pid = Number(fs.readFileSync(state.pid, 'utf8').trim());
+  if (!Number.isInteger(pid) || pid <= 0) throw new Error('Ghost PID state is invalid. Refusing to connect.');
+  try { process.kill(pid, 0); }
+  catch { throw new Error('The recorded Ghost process is not running. Start a fresh isolated browser session.'); }
+  return fs.readFileSync(state.endpoint, 'utf8').trim();
+}
+
+export async function connectGhost({ browser = 'edge' } = {}) {
   const selected = resolveBrowser(browser);
-  const state = getProfileStatePath(selected);
+  const endpoint = requireLiveGhost(selected);
   let connected;
   if (selected.engine === 'firefox' || selected.engine === 'webkit') {
-    if (!fs.existsSync(state.endpoint)) {
-      throw new Error(`Ghost ${selected.id} is not running. Start it with node scripts/ghost-launcher.js --browser=${selected.id}.`);
+    if (!endpoint.startsWith('ws://127.0.0.1:')) {
+      throw new Error('Refusing a Playwright endpoint that is not bound to 127.0.0.1.');
     }
-    const endpoint = fs.readFileSync(state.endpoint, 'utf8').trim();
-    if (!endpoint.startsWith('ws://127.0.0.1:')) throw new Error('Refusing a non-loopback Playwright endpoint.');
     connected = await (selected.engine === 'webkit' ? webkit : firefox).connect(endpoint);
   } else {
-    const endpoint = `http://127.0.0.1:${selected.port}`;
+    const expected = `http://127.0.0.1:${selected.port}`;
+    if (endpoint !== expected) throw new Error('Recorded browser endpoint does not match the selected browser. Refusing to attach.');
     const response = await fetch(`${endpoint}/json/version`);
-    if (!response.ok) throw new Error(`Ghost ${selected.id} CDP endpoint is unavailable.`);
+    if (!response.ok) throw new Error(`Ghost ${selected.id} endpoint is unavailable.`);
     const info = await response.json();
     if (!info.webSocketDebuggerUrl || new URL(info.webSocketDebuggerUrl).hostname !== '127.0.0.1') {
-      throw new Error('Refusing a CDP endpoint that is not bound to 127.0.0.1.');
+      throw new Error('Refusing a browser endpoint that is not bound to 127.0.0.1.');
     }
     connected = await chromium.connectOverCDP(endpoint);
   }
