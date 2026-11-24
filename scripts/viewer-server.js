@@ -8,7 +8,7 @@ const arg = name => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const browserName = arg('--browser') || 'chrome';
+const browserName = arg('--browser') || 'edge';
 const port = Number(arg('--port') || 9229);
 const HOST = '127.0.0.1';
 const clients = new Set();
@@ -17,6 +17,13 @@ let cdpSession;
 let screenshotTimer;
 let browserConnection;
 let page;
+
+function safeDisplayUrl(value) {
+  try {
+    const url = new URL(value);
+    return `${url.origin}${url.pathname}`;
+  } catch { return 'about:blank'; }
+}
 
 function broadcastFrame(buffer) {
   const frame = Buffer.from(buffer);
@@ -43,11 +50,11 @@ refresh();setInterval(refresh,1000);
 async function start() {
   browserConnection = await connectGhost({ browser: browserName });
   page = browserConnection.page;
-  current = { browser: browserConnection.selectedBrowser, url: page.url(), status: 'connected' };
-  page.on('framenavigated', () => { current.url = page.url(); });
+  current = { browser: browserConnection.selectedBrowser, url: safeDisplayUrl(page.url()), status: 'connected' };
+  page.on('framenavigated', () => { current.url = safeDisplayUrl(page.url()); });
   if (browserConnection.selectedBrowser === 'firefox' || browserConnection.selectedBrowser === 'webkit') {
     screenshotTimer = setInterval(async () => {
-      try { broadcastFrame(await page.screenshot({ type: 'jpeg', quality: 65 })); current.url = page.url(); }
+      try { broadcastFrame(await page.screenshot({ type: 'jpeg', quality: 65 })); current.url = safeDisplayUrl(page.url()); }
       catch { current.status = 'screenshot unavailable'; }
     }, 800);
   } else {
@@ -55,7 +62,7 @@ async function start() {
     cdpSession.on('Page.screencastFrame', async event => {
       broadcastFrame(Buffer.from(event.data, 'base64'));
       try { await cdpSession.send('Page.screencastFrameAck', { sessionId: event.sessionId }); } catch {}
-      current.url = page.url();
+      current.url = safeDisplayUrl(page.url());
     });
     await cdpSession.send('Page.startScreencast', {
       format: 'jpeg', quality: 70, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1
@@ -71,7 +78,7 @@ const server = http.createServer((request, response) => {
   }
   if (request.url === '/status') {
     response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-    response.end(JSON.stringify(current));
+    response.end(JSON.stringify({ ...current, url: safeDisplayUrl(current.url) }));
     return;
   }
   if (request.url === '/stream') {
