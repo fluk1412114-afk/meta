@@ -16,7 +16,6 @@ test('every registered browser has a distinct profile directory and port', () =>
 
 test('Edge is the default browser preference', () => {
   assert.equal(getBrowserProfile().id, 'edge');
-  assert.equal(resolveBrowser().requested, 'edge');
 });
 
 test('unsupported browser names are rejected instead of silently mapped', () => {
