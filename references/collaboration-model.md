@@ -20,7 +20,7 @@ Meta cannot directly:
 
 Meta may create website code, a website artifact, or files and offer them for download if the current Meta AI interface supports that workflow. A generated website is not the same as a deployed/public website. A download link is not proof that a file was saved locally. Verify the actual artifact and delivery state before reporting completion.
 
-Use Remote or another explicitly authorized computer-access tool for local computer operations. Keep that execution separate from Meta's website session. Never imply that Meta itself performed a local action just because it generated instructions or a file for that action.
+Use another explicitly authorized computer-access mechanism for local computer operations. Keep that execution separate from Meta's website session. Never imply that Meta itself performed a local action just because it generated instructions or a file for that action.
 
 ## Default collaboration loop
 
@@ -50,7 +50,7 @@ Send only actionable corrections back to Meta. Do not ask Meta to confirm its ow
 
 ## Escalation and approvals
 
-- If a task needs local file access, local execution, application control, or deployment outside Meta AI, route that step to Remote or another authorized tool.
+- If a task needs local file access, local execution, application control, or deployment outside Meta AI, route that step to an explicitly authorized computer-access mechanism.
 - If no authorized computer-access tool is available, return the generated file or instructions and explain that local installation/execution remains undone.
 - Obtain explicit user approval before public publishing, messaging, purchases, paid credits, destructive file operations, or other consequential actions.
 - If a capability is absent from the live Meta UI, stop that branch and offer a useful alternative rather than pretending it worked.
