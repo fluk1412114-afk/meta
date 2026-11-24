@@ -42,7 +42,7 @@ Ghost Mode is headless by default. To show the isolated browser window explicitl
 node scripts/ghost-launcher.js --browser edge --headed
 ```
 
-If manual sign-in is required, start the isolated profile with `--headed`, complete sign-in yourself, then stop and restart without `--headed` for hidden operation. Passwords, MFA/OTP, CAPTCHA, and verification are never automated. The browser profile is isolated per browser under `%LOCALAPPDATA%\MetaAI-Ghost-Profile\<browser>`.
+If manual sign-in is required, start the isolated profile with `--headed`, complete sign-in yourself, then stop and restart without `--headed` for hidden operation. Passwords, MFA/OTP, CAPTCHA, and verification are never automated. The browser profile is isolated per browser under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>`.
 
 Connect to Meta AI and verify the isolated session:
 
