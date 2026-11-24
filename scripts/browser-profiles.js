@@ -9,7 +9,8 @@ const localBase = process.env.LOCALAPPDATA ||
   (platform === 'win32' ? path.join(os.homedir(), 'AppData', 'Local') :
     platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') :
       process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'));
-export const PROFILE_ROOT = path.join(localBase, 'MetaAI-Ghost-Profile');
+// Keep the established profile directory so existing isolated sign-in state is preserved.
+export const PROFILE_ROOT = path.join(localBase, 'MetaAI-CDP-Profile');
 
 const winRoots = [
   process.env.PROGRAMFILES,
@@ -136,4 +137,23 @@ export function getProfileStatePath(browser) {
     pid: path.join(item.profilePath, '.ghost.pid'),
     endpoint: path.join(item.profilePath, '.ghost-endpoint')
   };
+}
+
+export function isManagedGhostProcess(pid, browser) {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try { process.kill(pid, 0); } catch { return false; }
+  let commandLine = '';
+  try {
+    if (platform === 'win32') {
+      const command = `$p=Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}"; if ($p) { $p.CommandLine }`;
+      commandLine = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
+        encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore']
+      }).trim();
+    } else if (platform === 'darwin') {
+      commandLine = execFileSync('ps', ['-p', String(pid), '-o', 'command='], { encoding: 'utf8' }).trim();
+    } else {
+      commandLine = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replaceAll('\0', ' ');
+    }
+  } catch { return false; }
+  return Boolean(commandLine && commandLine.toLowerCase().includes(path.resolve(browser.profilePath).toLowerCase()));
 }
