@@ -9,7 +9,7 @@ const localBase = process.env.LOCALAPPDATA ||
   (platform === 'win32' ? path.join(os.homedir(), 'AppData', 'Local') :
     platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') :
       process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'));
-export const PROFILE_ROOT = path.join(localBase, 'MetaAI-CDP-Profile');
+export const PROFILE_ROOT = path.join(localBase, 'MetaAI-Ghost-Profile');
 
 const winRoots = [
   process.env.PROGRAMFILES,
@@ -74,8 +74,8 @@ function playwrightExecutable(engine) {
   }
 }
 
-export function getBrowserProfile(name) {
-  const key = String(name || 'chrome').toLowerCase();
+export function getBrowserProfile(name = 'edge') {
+  const key = String(name || 'edge').toLowerCase();
   const definition = definitions[key];
   if (!definition) throw new Error(`Unsupported browser "${key}". Choose: ${Object.keys(definitions).join(', ')}.`);
   if (definition.macOSOnly && platform !== 'darwin') {
@@ -115,18 +115,18 @@ export function listBrowsers() {
   });
 }
 
-export function resolveBrowser(requested = 'chrome') {
-  const requestedKey = String(requested || 'chrome').toLowerCase();
+export function resolveBrowser(requested = 'edge') {
+  const requestedKey = String(requested || 'edge').toLowerCase();
   const selected = getBrowserProfile(requestedKey);
   if (selected.installed) return { ...selected, requested: requestedKey, fallback: false };
-  const order = ['chrome', 'edge', 'brave', 'firefox'];
+  const order = ['edge', 'chrome', 'brave', 'firefox'];
   for (const key of order) {
     const candidate = getBrowserProfile(key);
     if (candidate.installed) {
       return { ...candidate, requested: requestedKey, fallback: true };
     }
   }
-  throw new Error('No supported installed browser found. Install Chrome, Edge, Brave, or Firefox.');
+  throw new Error('No supported installed browser found. Install Microsoft Edge, Chrome, Brave, or Firefox.');
 }
 
 export function getProfileStatePath(browser) {
