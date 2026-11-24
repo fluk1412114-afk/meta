@@ -14,7 +14,7 @@ Ghost Mode is the only browser transport supported by this Skill. It launches a 
 
 The automatic fallback order is Edge → Chrome → Brave → Firefox. WebKit is opt-in and is not part of automatic fallback. The actual selected browser must be logged and reported when fallback occurs.
 
-Profiles are isolated under `%LOCALAPPDATA%\MetaAI-Ghost-Profile\<browser>` on Windows. Each browser has a distinct profile directory and transport port. Never point a profile at the user's normal browser data directory.
+Profiles are isolated under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. Each browser has a distinct profile directory and transport port. Never point a profile at the user's normal browser data directory.
 
 ## Start and connect
 
