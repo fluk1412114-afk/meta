@@ -24,6 +24,7 @@ Meta AI is the web-side operational lead. ChatGPT is the independent analyst and
    - Assistant planning: [references/assistant-agent.md](references/assistant-agent.md)
    - Capability verification: [references/capability-map.md](references/capability-map.md)
 4. Ghost Mode is ON by default. Use its isolated per-browser profile and loopback-only endpoint. Choose a browser using the user's stated preference or the registry fallback. Do not attach to the everyday browser profile. See [references/ghost-mode.md](references/ghost-mode.md).
+   - If the user explicitly requests their already-open Edge session, the optional Tunnel Dashboard Edge Browser MCP may be used instead. Follow [references/browser-control.md](references/browser-control.md), verify the connection with read-only browser tools, and never switch transports silently.
 5. Use Playwright locators for page actions. Inspect the live page before acting and after meaningful changes.
 6. Verify the actual result before reporting success. Distinguish completed, partially completed, blocked, and unverified work.
 
