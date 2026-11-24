@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn, execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { resolveBrowser, getBrowserProfile, getProfileStatePath, listBrowsers } from './browser-profiles.js';
+import { resolveBrowser, getBrowserProfile, getProfileStatePath, listBrowsers, isManagedGhostProcess } from './browser-profiles.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -146,25 +146,6 @@ export async function launchGhost({ browser = 'edge', headed = false, port } = {
   throw new Error(`${selected.name} started but its local browser endpoint did not become ready.`);
 }
 
-function processCommandLine(pid) {
-  if (process.platform === 'win32') {
-    const command = `$p=Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}"; if ($p) { $p.CommandLine }`;
-    return execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
-      encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore']
-    }).trim();
-  }
-  return fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replaceAll('\0', ' ');
-}
-
-function assertOwnedProcess(pid, browser) {
-  let commandLine = '';
-  try { commandLine = processCommandLine(pid); } catch {}
-  const expected = path.resolve(browser.profilePath).toLowerCase();
-  if (!commandLine || !commandLine.toLowerCase().includes(expected)) {
-    throw new Error('The recorded process does not identify the selected isolated profile. Refusing to terminate it; inspect the Ghost PID file manually.');
-  }
-}
-
 export async function stopGhost(browser = 'edge') {
   const selected = getBrowserProfile(browser);
   if (!selected.installed) throw new Error(`Browser "${browser}" is not installed; refusing to resolve a different browser for stop.`);
@@ -175,16 +156,17 @@ export async function stopGhost(browser = 'edge') {
   }
   const pid = Number(fs.readFileSync(state.pid, 'utf8').trim());
   if (!Number.isInteger(pid) || pid <= 0) throw new Error('Invalid Ghost PID file; refusing to terminate an unknown process.');
-  try {
-    process.kill(pid, 0);
-    assertOwnedProcess(pid, selected);
-  } catch (error) {
+  try { process.kill(pid, 0); }
+  catch (error) {
     if (error.code === 'ESRCH') {
       for (const file of [state.pid, state.endpoint]) { try { fs.unlinkSync(file); } catch {} }
       console.log(`Removed stale Ghost state for ${selected.id}.`);
       return false;
     }
     throw error;
+  }
+  if (!isManagedGhostProcess(pid, selected)) {
+    throw new Error('The recorded process does not identify the selected isolated profile. Refusing to terminate it; inspect the Ghost PID file manually.');
   }
   if (process.platform === 'win32') {
     execFileSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
