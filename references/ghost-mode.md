@@ -4,7 +4,7 @@ Ghost Mode is the default and only browser transport for this Skill. It operates
 
 ## Isolation and control model
 
-- Profiles are stored at `%LOCALAPPDATA%\MetaAI-Ghost-Profile\<browser>` on Windows. macOS/Linux use the platform's local application-data directory with the same `MetaAI-Ghost-Profile/<browser>` layout.
+- Profiles are stored at `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. macOS/Linux use the platform's local application-data directory with the same `MetaAI-CDP-Profile/<browser>` layout.
 - Microsoft Edge is the default browser. If it is unavailable, fallback order is Chrome → Brave → Firefox. The selected browser is logged.
 - Chrome, Edge, and Brave use their own executable, port, isolated profile, and Chromium CDP transport. Firefox uses Playwright's browser-server transport, not raw CDP.
 - Firefox automation requires the Playwright-managed engine installed with `npx playwright-core install firefox`. Experimental WebKit requires `npx playwright-core install webkit` and is macOS-only.
