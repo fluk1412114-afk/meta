@@ -92,9 +92,11 @@ export function getBrowserProfile(name = 'edge') {
   const playwrightExecutablePath = definition.engine ? playwrightExecutable(definition.engine) : null;
   const engineInstalled = !definition.engine ||
     Boolean(playwrightExecutablePath && fs.existsSync(playwrightExecutablePath));
-  const installed = definition.engine === 'webkit'
-    ? platform === 'darwin' && engineInstalled
-    : Boolean(executablePath && engineInstalled);
+  const installed = definition.engine === 'firefox'
+    ? engineInstalled
+    : definition.engine === 'webkit'
+      ? platform === 'darwin' && engineInstalled
+      : Boolean(executablePath && engineInstalled);
   return {
     ...definition, id: key, executablePath, playwrightExecutablePath, installed,
     profilePath: path.join(PROFILE_ROOT, key),
