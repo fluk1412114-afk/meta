@@ -196,6 +196,7 @@ export async function stopGhost(browser = 'chrome') {
   }
   const pid = Number(fs.readFileSync(state.pid, 'utf8').trim());
   if (!Number.isInteger(pid) || pid <= 0) throw new Error('Invalid Ghost PID file; refusing to terminate an unknown process.');
+  if (!isManagedGhostProcess(pid, selected)) throw new Error('The recorded process does not match the selected isolated browser profile. Refusing to terminate it.');
   try {
     if (process.platform === 'win32') {
       execFileSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
