@@ -1,36 +1,34 @@
 # Ghost Mode architecture
 
-Ghost Mode is the default and only browser transport for this Skill. It operates a separate browser process with a dedicated profile; it does not attach to the user's everyday browser or control the desktop.
+Ghost Mode is the default browser transport for this Skill. Browser startup is lazy and task-driven: `connectGhost()` starts a managed browser only when a workflow needs it, then reuses the existing managed session when its PID and loopback endpoint are healthy. It operates a separate browser process and isolated profile; it does not attach to the user's everyday browser. Workflows must not terminate a session that may still be in use; explicit `ghost stop` remains a user-directed action.
 
 ## Isolation and control model
 
 - Profiles are stored at `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. macOS/Linux use the platform's local application-data directory with the same `MetaAI-CDP-Profile/<browser>` layout.
-- Microsoft Edge is the default browser. If it is unavailable, fallback order is Chrome → Brave → Firefox. The selected browser is logged.
-- Chrome, Edge, and Brave use their own executable, port, isolated profile, and Chromium CDP transport. Firefox uses Playwright's browser-server transport, not raw CDP.
-- Firefox automation requires the Playwright-managed engine installed with `npx playwright-core install firefox`. Experimental WebKit requires `npx playwright-core install webkit` and is macOS-only.
-- All debugging and Playwright endpoints bind to `127.0.0.1`. Never expose them on `0.0.0.0`, a LAN address, or a public interface.
-- Chromium defaults to `--headless=new`; Firefox defaults to Playwright `headless: true`. Headed mode is opt-in with `--headed`.
-- Browser interactions use Playwright locators and browser protocol input. No OS-level mouse/keyboard injection, desktop automation, active-window switching, or focus manipulation is used.
+- Chrome, Edge, and Brave use their own executable, port, and profile. Firefox and experimental macOS WebKit use Playwright's browser-server transport, not raw CDP.
+- Firefox automation requires the Playwright-managed engine installed with `npx playwright-core install firefox`. WebKit requires `npx playwright-core install webkit` and is macOS-only.
+- All debug and Playwright endpoints bind to `127.0.0.1`. Never expose them on `0.0.0.0`, a LAN address, or a public interface.
+- Chromium defaults to `--headless=new`; Firefox/WebKit default to Playwright `headless: true`. Headed mode is opt-in with `--headed`.
+- Browser interactions use Playwright locators and browser protocol input. No OS-level mouse/keyboard injection, desktop automation, or focus switching is used.
 - Ghost Mode does not read or export cookies, credentials, local storage, browser databases, or profile secrets.
-- The controller requires the recorded Ghost PID and expected endpoint before connecting. It rejects unknown ports and endpoints that do not match the selected browser.
-- The stop command verifies that the recorded process command line belongs to the selected isolated profile before terminating it.
 
 ## Supported browsers
 
 | Browser | Executable | Port | Playwright transport | Notes |
 |---|---|---:|---|---|
-| Edge | msedge.exe | 9224 | chromium.connectOverCDP | Default; Chromium headless by default |
-| Chrome | chrome.exe | 9223 | chromium.connectOverCDP | Fallback |
+| Chrome | chrome.exe | 9223 | chromium.connectOverCDP | Chromium headless by default |
+| Edge | msedge.exe | 9224 | chromium.connectOverCDP | Chromium headless by default |
 | Brave | brave.exe | 9225 | chromium.connectOverCDP | Uses Chromium channel compatibility |
 | Firefox | firefox.exe | 9226 | firefox.connect | Playwright browser server; no raw CDP |
 | WebKit | Playwright WebKit | 9227 | webkit.connect | Experimental, macOS only |
 
+If the requested browser is not installed, selection falls back in this order: Chrome, Edge, Brave, Firefox. The selected browser is logged. WebKit is opt-in and is not in the fallback list.
+
 ## Commands
 
 ```powershell
-npm ci
-node scripts/ghost-launcher.js --browser edge
 node scripts/ghost-launcher.js --browser chrome
+node scripts/ghost-launcher.js --browser edge
 node scripts/ghost-launcher.js --browser brave
 node scripts/ghost-launcher.js --browser firefox
 node scripts/ghost-launcher.js --browser edge --headed
@@ -39,7 +37,7 @@ node scripts/ghost-launcher.js stop --browser edge
 node scripts/viewer-server.js --browser edge
 ```
 
-The viewer is read-only and listens at `http://127.0.0.1:9229/viewer`. Chromium uses `Page.startScreencast`; Firefox uses screenshot polling at 800 ms. Viewer status displays a sanitized URL without query strings or fragments.
+The viewer is read-only and listens at `http://127.0.0.1:9229/viewer`. It connects only when explicitly requested. Frame capture starts only while at least one viewer stream is connected and stops when the last viewer disconnects. Chromium uses `Page.startScreencast` at a reduced frame size/rate; Firefox/WebKit use screenshot polling at 1200 ms. Closing the Viewer does not terminate the Ghost Browser session. It is not exposed to the network.
 
 ## Manual sign-in and consequential actions
 

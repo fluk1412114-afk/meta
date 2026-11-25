@@ -12,7 +12,7 @@ This file is a decision guide, not a static feature guarantee. Meta AI changes f
 | Threads discovery | Search discussions, topics, public conversation | Current surface exposes relevant search/context and candidate posts open successfully |
 | Image generation/editing | Create or modify images | Image creation/edit controls visible; new result appears |
 | Video generation | Create or animate video | Video creation controls visible; playable result appears |
-| Multi-step assistance | Research  plan  creative output | Each step is supported and independently verified |
+| Multi-step assistance | Research → plan → creative output | Each step is supported and independently verified |
 
 ## Live verification checklist
 
@@ -44,18 +44,18 @@ Model names, Instant/Think modes, limits, output formats, generation quotas, and
 Website/code generation and file creation or download are possible workflow targets only when the current Meta AI interface exposes a supported creation or artifact flow. Inspect the exact controls and resulting artifact before relying on them.
 
 Distinguish these outcomes precisely:
-- **Website code/artifact created** � the content or project artifact exists in Meta's interface or returned output.
-- **File offered for download** � a visible download action or link is available.
-- **File downloaded** � the download completed and the file can be verified at an observed location.
-- **Website deployed** � the site is actually published to a reachable hosting destination; never infer this from generated code or a preview.
+- **Website code/artifact created** — the content or project artifact exists in Meta's interface or returned output.
+- **File offered for download** — a visible download action or link is available.
+- **File downloaded** — the download completed and the file can be verified at an observed location.
+- **Website deployed** — the site is actually published to a reachable hosting destination; never infer this from generated code or a preview.
 
-Meta's website session does not grant access to the user's local filesystem, desktop, installed applications, or everyday browser. Use another explicitly authorized computer-access mechanism for local inspection, saving, editing, installation, execution, or deployment steps outside Meta AI. Do not claim those local steps are complete unless separately verified.
+Meta's website session does not grant access to the user's local filesystem, desktop, installed applications, or everyday browser. Use Remote or another authorized computer-access tool for local inspection, saving, editing, installation, execution, or deployment steps outside Meta AI. Do not claim those local steps are complete unless separately verified.
 
 ## Directly verified in this account
 
-### 2026-11-18 � HTML artifact creation and export
+### 2026-11-18 — HTML artifact creation and export
 
-- Surface: Meta AI website  Artifacts, signed-in session used by the `meta` skill.
+- Surface: Meta AI website → Artifacts, signed-in session used by the `meta` skill.
 - Action: requested a Thai responsive one-page website, opened the HTML artifact preview, and used the artifact download control.
 - Observed export behavior: the initial React-based HTML artifact exported as a `.tar.gz` containing `App.tsx`, `index.css`, and an image asset; it was not a standalone HTML file.
 - Follow-up: asked Meta AI for a separate standalone `index.html` with inline CSS/JavaScript and no build step. Meta created a separate HTML artifact; its download control returned an actual `index.html` file.
@@ -72,21 +72,3 @@ When a new feature is directly verified, add:
 - known limitations or uncertainty.
 
 Mark reports from third parties or untested UI elements as unverified. Re-check volatile claims before using them in a new task.
-
-### 2026-11-22 - Public Meta AI landing page inspection (Thai locale)
-
-- Surface: `https://www.meta.ai/` (public landing page; unauthenticated Ghost Mode Chrome session). The page title was `Meta AI - Your AI Assistant for Images, Shopping and More`; visible page content was localized in Thai.
-- Top-level visible controls: an AI prompt composer, an attachment button, a send button, a sign-in button, and an app-download button. The prompt composer was labeled in Thai as the Meta AI question entry point.
-- Promoted capability areas visible on the landing page:
-  - Meta AI assistant and question answering.
-  - Image creation and image editing.
-  - Shopping and product discovery.
-  - Local recommendations and place discovery.
-  - Deep research.
-  - Business assistance and Instagram performance support.
-  - Content drafting and planning for captions, posts, Reels, and Stories.
-- The page displayed illustrative sample prompts and sample outputs for shopping, local discovery, research, business insights, and Reels captions. These are marketing/demo examples, not proof that the current signed-in account can access every workflow or that the displayed sample data is live.
-- Verified outcome: the homepage loaded; its title and Thai body text were readable; the composer, attachment, and send controls were present in the page DOM.
-- Not tested: sign-in, submitting a prompt, receiving an answer, attaching a file, image generation, shopping actions, deep research execution, business-account connection, or authenticated/social content access.
-- Operational guidance: use the public landing page to discover the product's currently advertised capability families and localized UI language. Then inspect the signed-in session and relevant live controls before selecting a workflow. Do not treat promotional sample text, sample metrics, or visible feature cards as live user data or guaranteed account entitlements. The public homepage alone is not sufficient to claim that a capability is available in the user's account or region.
-

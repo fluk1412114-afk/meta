@@ -7,7 +7,7 @@ const browserIndex = args.indexOf('--browser');
 const inlineBrowser = args.find(value => value.startsWith('--browser='));
 const browser = inlineBrowser
   ? inlineBrowser.slice('--browser='.length)
-  : browserIndex >= 0 ? args[browserIndex + 1] : 'edge';
+  : browserIndex >= 0 ? args[browserIndex + 1] : 'chrome';
 const outputIndex = args.indexOf('--output');
 const inlineOutput = args.find(value => value.startsWith('--output='));
 const outputDir = inlineOutput
@@ -24,15 +24,14 @@ const promptParts = args.filter((value, index) => {
 const prompt = promptParts.join(' ');
 
 if (!prompt.trim()) {
-  console.error('Usage: node scripts/create-image.js "image prompt" [--browser edge|chrome|brave|firefox] [--output folder]');
+  console.error('Usage: node scripts/create-image.js "image prompt" [--browser chrome|edge|brave|firefox] [--output folder]');
   process.exit(2);
 }
 
 let connection;
 try {
   connection = await connectGhost({ browser });
-  const { context, selectedBrowser } = connection;
-  const page = await context.newPage();
+  const { page, selectedBrowser } = connection;
   await waitForMetaAI(page);
   const tiles = page.locator('img[data-testid="ur-image-tile"]');
   const baseline = await tiles.count();

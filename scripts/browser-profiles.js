@@ -9,7 +9,6 @@ const localBase = process.env.LOCALAPPDATA ||
   (platform === 'win32' ? path.join(os.homedir(), 'AppData', 'Local') :
     platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Application Support') :
       process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'));
-// Keep the established profile directory so existing isolated sign-in state is preserved.
 export const PROFILE_ROOT = path.join(localBase, 'MetaAI-CDP-Profile');
 
 const winRoots = [
@@ -75,16 +74,12 @@ function playwrightExecutable(engine) {
   }
 }
 
-export function getBrowserProfile(name = 'edge') {
-  const key = String(name || 'edge').toLowerCase();
+export function getBrowserProfile(name) {
+  const key = String(name || 'chrome').toLowerCase();
   const definition = definitions[key];
   if (!definition) throw new Error(`Unsupported browser "${key}". Choose: ${Object.keys(definitions).join(', ')}.`);
   if (definition.macOSOnly && platform !== 'darwin') {
-    return {
-      ...definition, id: key, installed: false,
-      profilePath: path.join(PROFILE_ROOT, key),
-      reason: 'WebKit is experimental and macOS-only.'
-    };
+    return { ...definition, id: key, installed: false, reason: 'WebKit is experimental and macOS-only.' };
   }
   let executablePath = null;
   if (definition.executable) {
@@ -96,11 +91,9 @@ export function getBrowserProfile(name = 'edge') {
   const playwrightExecutablePath = definition.engine ? playwrightExecutable(definition.engine) : null;
   const engineInstalled = !definition.engine ||
     Boolean(playwrightExecutablePath && fs.existsSync(playwrightExecutablePath));
-  const installed = definition.engine === 'firefox'
-    ? engineInstalled
-    : definition.engine === 'webkit'
-      ? platform === 'darwin' && engineInstalled
-      : Boolean(executablePath && engineInstalled);
+  const installed = definition.engine === 'webkit'
+    ? platform === 'darwin' && engineInstalled
+    : Boolean(executablePath && engineInstalled);
   return {
     ...definition, id: key, executablePath, playwrightExecutablePath, installed,
     profilePath: path.join(PROFILE_ROOT, key),
@@ -122,18 +115,18 @@ export function listBrowsers() {
   });
 }
 
-export function resolveBrowser(requested = 'edge') {
-  const requestedKey = String(requested || 'edge').toLowerCase();
+export function resolveBrowser(requested = 'chrome') {
+  const requestedKey = String(requested || 'chrome').toLowerCase();
   const selected = getBrowserProfile(requestedKey);
   if (selected.installed) return { ...selected, requested: requestedKey, fallback: false };
-  const order = ['edge', 'chrome', 'brave', 'firefox'];
+  const order = ['chrome', 'edge', 'brave', 'firefox'];
   for (const key of order) {
     const candidate = getBrowserProfile(key);
     if (candidate.installed) {
       return { ...candidate, requested: requestedKey, fallback: true };
     }
   }
-  throw new Error('No supported installed browser found. Install Microsoft Edge, Chrome, Brave, or Firefox.');
+  throw new Error('No supported installed browser found. Install Chrome, Edge, Brave, or Firefox.');
 }
 
 export function getProfileStatePath(browser) {
@@ -143,23 +136,4 @@ export function getProfileStatePath(browser) {
     pid: path.join(item.profilePath, '.ghost.pid'),
     endpoint: path.join(item.profilePath, '.ghost-endpoint')
   };
-}
-
-export function isManagedGhostProcess(pid, browser) {
-  if (!Number.isInteger(pid) || pid <= 0) return false;
-  try { process.kill(pid, 0); } catch { return false; }
-  let commandLine = '';
-  try {
-    if (platform === 'win32') {
-      const command = `$p=Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}"; if ($p) { $p.CommandLine }`;
-      commandLine = execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
-        encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore']
-      }).trim();
-    } else if (platform === 'darwin') {
-      commandLine = execFileSync('ps', ['-p', String(pid), '-o', 'command='], { encoding: 'utf8' }).trim();
-    } else {
-      commandLine = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replaceAll('\0', ' ');
-    }
-  } catch { return false; }
-  return Boolean(commandLine && commandLine.toLowerCase().includes(path.resolve(browser.profilePath).toLowerCase()));
 }

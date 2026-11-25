@@ -1,50 +1,49 @@
 # Browser control for Meta AI
 
-Ghost Mode is the only browser transport supported by this Skill. It launches a dedicated browser process with a per-browser isolated profile and keeps all automation endpoints on loopback. It never connects to an already-running everyday browser session.
+Ghost Mode is the default transport. It launches a dedicated browser process with a per-browser isolated profile and keeps all automation endpoints on loopback. The separate Tunnel Dashboard Edge Browser MCP remains an optional external integration; it is not required by Ghost Mode.
 
-## Browser registry and defaults
+## Ghost Mode browser registry
 
-| Browser | Default | Executable | Port | Transport |
-|---|---:|---|---:|---|
-| Microsoft Edge | Yes | msedge.exe | 9224 | Playwright Chromium CDP |
-| Chrome | Fallback | chrome.exe | 9223 | Playwright Chromium CDP |
-| Brave | Fallback | brave.exe | 9225 | Playwright Chromium CDP |
-| Firefox | Fallback | firefox.exe | 9226 | Playwright browser server |
-| WebKit | Experimental | Playwright WebKit | 9227 | Playwright browser server; macOS only |
+| Browser | Executable | Port | Transport | Notes |
+|---|---|---:|---|---|
+| Chrome | chrome.exe | 9223 | chromium.connectOverCDP | Default browser |
+| Edge | msedge.exe | 9224 | chromium.connectOverCDP | Chromium |
+| Brave | brave.exe | 9225 | chromium.connectOverCDP | executablePath + Chrome-compatible channel |
+| Firefox | firefox.exe | 9226 | firefox.connect | Playwright browser server; not raw CDP |
+| WebKit | Playwright WebKit | 9227 | webkit.connect | Experimental; macOS only |
 
-The automatic fallback order is Edge → Chrome → Brave → Firefox. WebKit is opt-in and is not part of automatic fallback. The actual selected browser must be logged and reported when fallback occurs.
-
-Profiles are isolated under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. Each browser has a distinct profile directory and transport port. Never point a profile at the user's normal browser data directory.
+Profiles are isolated under `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` on Windows. If the requested browser is unavailable, fallback order is Chrome → Edge → Brave → Firefox. The selected browser is logged. WebKit is not part of automatic fallback.
 
 ## Start and connect
 
+Normal workflows should not require a separate manual start command. Browser launch is lazy: `connectGhost()` starts Ghost only when needed and reuses a healthy managed session. The isolated browser remains headless unless `--headed` is explicitly requested. Do not launch the Viewer for routine automation.
+
 ```powershell
-npm ci
+node scripts/ghost-launcher.js --browser chrome
 node scripts/ghost-launcher.js --browser edge
+node scripts/ghost-launcher.js --browser brave
+node scripts/ghost-launcher.js --browser firefox
+node scripts/ghost-launcher.js --browser edge --headed
 node scripts/connect-meta-ai.js --browser edge
-node scripts/create-image.js "A warm minimalist coffee shop" --browser edge
+node scripts/create-image.js "A warm minimalist coffee shop" --browser brave
 ```
 
-Chromium launches with `--headless=new`; Firefox uses Playwright `headless: true`. Headed mode is opt-in with `--headed`. Chromium connects only to its registered `http://127.0.0.1:<port>` endpoint. Firefox connects only to its recorded `ws://127.0.0.1:<port>` Playwright endpoint.
-
-Before connecting, the controller requires a live PID record and a matching endpoint record for the selected browser. It rejects missing, stale, non-loopback, or mismatched endpoint state. It never searches for or attaches to an arbitrary browser debugging port.
+Chromium launches with `--headless=new`; Firefox uses Playwright `headless: true`. Headed mode is used only when the user passes `--headed`. Chromium connects with `chromium.connectOverCDP('http://127.0.0.1:<port>')`. Firefox connects using Playwright's own transport because Firefox does not offer compatible raw CDP.
 
 ## Watch and manage
 
-Run `node scripts/viewer-server.js --browser edge`, then open `http://127.0.0.1:9229/viewer`. The viewer is read-only. Chromium uses `Page.startScreencast`; Firefox/WebKit use screenshot polling every 800 ms. It displays the selected browser, a sanitized URL, status, and screenshot. URL query strings and fragments are not exposed in the status response.
+Run `node scripts/viewer-server.js --browser edge`, then open `http://127.0.0.1:9229/viewer`. The viewer is read-only. Chromium uses `Page.startScreencast`; Firefox/WebKit use screenshot polling every 800 ms. It displays browser, URL, status, and screenshot.
 
 ```powershell
 node scripts/ghost-launcher.js list-browsers
 node scripts/ghost-launcher.js stop --browser edge
 ```
 
-The stop command checks that the recorded process command line contains the selected isolated profile path before terminating it. If ownership cannot be verified, it refuses to stop the process.
-
 ## No desktop interference
 
-All page actions use Playwright locators and browser-protocol input inside the isolated browser process. The scripts never use pyautogui, pynput, robotjs, xdotool, OS mouse/keyboard APIs, desktop-control APIs, active-window switching, or focus manipulation. Headless mode means the browser runs without a visible window by default. The viewer is the intended way to watch activity.
+All actions use Playwright locators and browser-protocol input. The scripts never use pyautogui, pynput, robotjs, xdotool, OS mouse/keyboard APIs, or focus/active-window manipulation. Headless mode means the browser runs without a visible window by default. The viewer is the only intended way to watch activity.
 
-All CDP and Playwright endpoints bind to `127.0.0.1`, never `0.0.0.0`. Do not expose debugging ports through a firewall, reverse proxy, tunnel, or LAN.
+All CDP and Playwright endpoints bind to `127.0.0.1`, never `0.0.0.0`. Do not expose debugging ports through a firewall, tunnel, or LAN.
 
 ## Authentication and sensitive actions
 
@@ -54,10 +53,6 @@ All CDP and Playwright endpoints bind to `127.0.0.1`, never `0.0.0.0`. Do not ex
 - Use only the selected isolated profile. Do not attach to the user's everyday browser profile.
 - Respect Meta AI's account, privacy, regional, and feature limits.
 
-## Troubleshooting
+## Optional Edge Browser MCP
 
-- If the selected browser is missing, the launcher reports the fallback browser. Install the requested browser or explicitly select an installed alternative.
-- If the transport port is busy, the launcher refuses to attach. Inspect the process using that port; do not change the endpoint validation to bypass the refusal.
-- If the PID or endpoint state is missing or stale, stop only the recorded Ghost process after verifying its profile ownership, then launch a fresh session.
-- If Firefox is selected, install its Playwright browser binary with `npx playwright-core install firefox`.
-- If a page action fails, inspect the live page and selector. Do not retry repeatedly against a changed or ambiguous interface.
+The separately installed Tunnel Dashboard Edge extension/Bridge may still be used by other workflows when its runtime tools are available and the user has paired it. It is independent of Ghost Mode and does not share Ghost Mode's Playwright connection or profile. Do not silently switch transports mid-task.

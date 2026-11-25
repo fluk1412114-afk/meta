@@ -1,197 +1,255 @@
 # คู่มือติดตั้งและใช้งาน Meta AI Skill
 
-คู่มือนี้อธิบายการติดตั้ง Skill `meta` และการใช้ Ghost Mode เพื่อควบคุมเบราว์เซอร์แยกเฉพาะสำหรับ Meta AI โดยไม่รบกวนหน้าต่าง แท็บ หรือโปรไฟล์เบราว์เซอร์ที่ใช้งานประจำ
+เอกสารนี้อธิบายการติดตั้ง Skill `meta` การใช้ Edge Browser MCP เป็นช่องทางหลัก และการเตรียม Chrome CDP/Playwright เป็นช่องทางสำรองบน Windows
 
-> Repository นี้เป็น Agent Skill และเครื่องมือช่วยใช้งาน Meta AI ผ่านเว็บไซต์ ไม่ใช่ผลิตภัณฑ์หรือไคลเอนต์อย่างเป็นทางการของ Meta ความสามารถด้าน Social Search, สร้างภาพ/วิดีโอ และ Artifacts ต้องตรวจจากหน้า Meta AI และบัญชีที่ลงชื่อเข้าใช้จริง
+> **ขอบเขต:** Repository นี้เป็น Agent Skill และเครื่องมือช่วยควบคุม Meta AI ผ่านเว็บไซต์ ไม่ใช่ Meta AI client อย่างเป็นทางการ และไม่ใช่แอป Meta/Facebook เอง ความสามารถด้านค้นหา Social, สร้างภาพ/วิดีโอ และ Artifacts ต้องตรวจจากหน้า Meta AI ที่ล็อกอินอยู่จริง เพราะอาจต่างกันตามบัญชี ประเทศ และการทยอยเปิดใช้
 
 ## 1. สิ่งที่ต้องเตรียม
 
-- Windows 10/11
+- Windows 10/11 x64
 - Node.js 20 ขึ้นไป และ npm
-- Microsoft Edge (ค่าเริ่มต้น) หรือ Chrome / Brave / Firefox
-- อินเทอร์เน็ตและบัญชีที่เข้าใช้งาน Meta AI ได้
-- Git หรือดาวน์โหลด Repository เป็น ZIP
+- Microsoft Edge และส่วนขยาย Tunnel Dashboard Edge Browser MCP ที่ติดตั้ง/จับคู่แล้ว (แนะนำ) หรือ Google Chrome ที่ติดตั้งในตำแหน่งมาตรฐานของ Windows สำหรับช่องทางสำรอง
+- อินเทอร์เน็ต
+- บัญชี Meta ที่ผู้ใช้สามารถลงชื่อเข้าใช้ Meta AI ได้
+- Git (แนะนำ) หรือดาวน์โหลด Repository เป็น ZIP
 
-ตรวจเวอร์ชัน:
+ตรวจ Node.js และ npm:
 
 ```powershell
 node --version
 npm --version
 ```
 
-## 2. ดาวน์โหลดและติดตั้ง
+Playwright ใน `package-lock.json` กำหนด Node.js `>=20` หากเวอร์ชันต่ำกว่านี้ให้ติดตั้ง Node.js รุ่นใหม่ก่อน
+
+## 2. ดาวน์โหลด Repository
+
+### วิธี A — ใช้ Git (แนะนำ)
 
 ```powershell
 git clone https://github.com/fluk1412114-afk/meta.git
 cd meta
+```
+
+### วิธี B — ดาวน์โหลด ZIP
+
+1. เปิด [Repository meta](https://github.com/fluk1412114-afk/meta)
+2. กด **Code → Download ZIP**
+3. แตกไฟล์ไปยังโฟลเดอร์ถาวร เช่น `D:\\Tools\\meta`
+4. เปิด PowerShell ในโฟลเดอร์ที่มี `package.json`
+
+## 3. ติดตั้ง Dependencies
+
+รันคำสั่ง:
+
+```powershell
 npm ci
 ```
 
-หากติดตั้ง Skill ให้ Codex ใช้ได้ทุกโปรเจกต์:
+คำสั่งนี้ติดตั้ง dependencies ตาม lockfile โดยใช้ Playwright สำหรับเชื่อมต่อ Chrome ที่เปิดผ่าน CDP
+
+**ไม่ต้องรัน `npx playwright install`** สำหรับ workflow ปัจจุบัน เพราะสคริปต์เชื่อมต่อกับ Google Chrome ที่ติดตั้งอยู่แล้ว ไม่ได้ใช้ Playwright เปิด browser binary ของตัวเอง
+
+## 4. เชื่อมต่อ Microsoft Edge Browser MCP (แนะนำ)
+
+Skill `meta` จะเลือกใช้ Edge Browser MCP ก่อนเมื่อเครื่องมือ Browser MCP ปรากฏใน runtime และ `browser_status` ยืนยันว่า Extension เชื่อมต่ออยู่ โดยใช้เครื่องมือสำหรับดูแท็บ ตรวจหน้าเว็บ อ่านองค์ประกอบ และคลิก/พิมพ์ผ่าน UI ที่มองเห็นได้
+
+สิ่งที่ต้องเตรียมจากโปรเจกต์ Tunnel Dashboard แยกต่างหาก:
+
+1. ติดตั้งและเปิดใช้ Tunnel Dashboard MCP Bridge รุ่นที่มี Edge Browser MCP
+2. ติดตั้ง Edge Extension จากโฟลเดอร์ `remote-mcp-bridge/edge-extension` ด้วยเมนู **Load unpacked** ใน `edge://extensions`
+3. จับคู่ Extension กับ Bridge และอนุญาต Site access สำหรับ `https://www.meta.ai/` ผ่านหน้าต่างยืนยันของ Edge
+4. ตรวจว่าเครื่องมือ `browser_status` รายงานว่าเชื่อมต่อแล้ว และใช้ `browser_list_tabs` เพื่อยืนยันว่าแท็บ Meta AI ปรากฏ
+
+หากเครื่องมือ Browser MCP ยังไม่ปรากฏใน runtime หรือสถานะไม่เชื่อมต่อ อย่าสมมติว่า Edge พร้อมใช้งาน ให้ใช้ Chrome CDP fallback ในหัวข้อถัดไปแทน การติดตั้ง Skill `meta` เพียงอย่างเดียวไม่ได้ติดตั้งหรือเปิดใช้งาน Extension/Bridge
+
+**ข้อควรระวัง:** อย่าเปิดเผย pairing token ในแชตหรือ commit ลง Git และอย่ารีสตาร์ต Tunnel Client/MCP Bridge โดยไม่มีการอนุญาตจากผู้ใช้
+
+## 5. เปิด Chrome โปรไฟล์เฉพาะสำหรับ Meta AI (Fallback)
+
+รัน:
 
 ```powershell
-$skills = Join-Path $HOME ".agents\skills"
+node scripts/launch-meta-cdp.js
+```
+
+สิ่งที่จะเกิดขึ้น:
+
+1. สคริปต์ตรวจ Chrome process และพอร์ต CDP ก่อน
+2. ถ้ายังไม่มีโปรไฟล์เฉพาะ จะเปิด Chrome ด้วยโปรไฟล์ `%LOCALAPPDATA%\\MetaAI-CDP-Profile`
+3. เปิดเว็บไซต์ [https://www.meta.ai/](https://www.meta.ai/)
+4. หากยังไม่ได้ลงชื่อเข้าใช้ ให้ผู้ใช้ลงชื่อเข้าใช้ด้วยตนเองในหน้าต่าง Chrome นี้
+5. เมื่อเปิดใช้งานครั้งถัดไป สคริปต์จะพยายามใช้โปรไฟล์เดิมและ session เดิม
+
+**สำคัญ:** อย่าปิดหน้าต่าง Chrome นี้ระหว่างที่กำลังให้สคริปต์ทำงาน และอย่าใช้โปรไฟล์ Chrome ปกติของคุณกับ CDP workflow นี้
+
+## 6. ตรวจการเชื่อมต่อ
+
+เปิด PowerShell อีกหน้าต่างในโฟลเดอร์ Repository แล้วรัน:
+
+```powershell
+node scripts/connect-meta-ai.js
+```
+
+ผลที่คาดหวัง:
+
+- แสดงว่าเชื่อมต่อ dedicated local Chrome CDP profile สำเร็จ
+- แสดงจำนวน Contexts และ Tabs
+- ตรวจพบ Meta AI tab หรือแจ้งให้เปิด Meta AI ใน Chrome โปรไฟล์เฉพาะก่อน
+
+สคริปต์ตรวจสอบนี้ไม่อ่านหรือแสดง Cookies, Local Storage, Passwords, Tokens, ชื่อแท็บ หรือ URL ของหน้าอื่น
+
+หากขึ้นว่าไม่พบ CDP process ให้กลับไปรัน `node scripts/launch-meta-cdp.js` และตรวจว่าหน้าต่าง Chrome โปรไฟล์เฉพาะยังเปิดอยู่
+
+## 7. ติดตั้ง Skill ให้ Codex ใช้
+
+การ Clone Repository ไว้เฉย ๆ ยังไม่ทำให้ Codex รู้จัก Skill ต้องวางโฟลเดอร์ที่มี `SKILL.md` ไว้ในตำแหน่ง Skills ที่ Codex ค้นหา
+
+### ติดตั้งระดับผู้ใช้ (ใช้ได้ทุกโปรเจกต์)
+
+เปิด PowerShell แล้วรัน:
+
+```powershell
+$skills = Join-Path $HOME ".agents\\skills"
 New-Item -ItemType Directory -Force -Path $skills | Out-Null
 git clone https://github.com/fluk1412114-afk/meta.git (Join-Path $skills "meta")
 Set-Location (Join-Path $skills "meta")
 npm ci
 ```
 
-ตำแหน่ง Skill คือ `%USERPROFILE%\.agents\skills\meta\SKILL.md`
-
-- Codex CLI / IDE: เรียกใช้ด้วย `$meta`
-- ChatGPT Desktop ที่รองรับ Standalone Skills: เพิ่ม Skill ผ่านตัวเลือก Skills ที่มีในแอป แล้วเรียกด้วย `@meta`
-- การ Clone Repository อย่างเดียวไม่ได้ทำให้ Skill ปรากฏใน ChatGPT Web หรือ Mobile โดยอัตโนมัติ
-
-## 3. เริ่ม Ghost Mode
-
-Microsoft Edge เป็นเบราว์เซอร์เริ่มต้น:
-
-```powershell
-node scripts/ghost-launcher.js
-```
-
-หรือระบุ Edge ชัดเจน:
-
-```powershell
-node scripts/ghost-launcher.js --browser edge
-```
-
-หากต้องการใช้เบราว์เซอร์อื่น:
-
-```powershell
-node scripts/ghost-launcher.js --browser chrome
-node scripts/ghost-launcher.js --browser brave
-node scripts/ghost-launcher.js --browser firefox
-```
-
-หากเลือก Firefox ต้องติดตั้ง Playwright Firefox engine ก่อนหนึ่งครั้ง:
-
-```powershell
-npx playwright-core install firefox
-```
-
-เมื่อเริ่มสำเร็จ Ghost Mode จะเปิดเบราว์เซอร์แบบ Headless ซึ่งไม่มีหน้าต่างมารบกวนการใช้งานเครื่องตามปกติ
-
-## 4. ลงชื่อเข้าใช้ Meta AI ด้วยตนเอง
-
-หากยังไม่ได้ลงชื่อเข้าใช้ ให้เปิด Ghost Browser แบบมีหน้าต่าง โดยยังคงใช้โปรไฟล์แยก:
-
-```powershell
-node scripts/ghost-launcher.js --browser edge --headed
-```
-
-จากนั้น:
-1. เปิดหรือไปที่ [https://www.meta.ai/](https://www.meta.ai/)
-2. ลงชื่อเข้าใช้ด้วยตนเองในหน้าต่าง Ghost Browser
-3. ปิด Ghost Browser ด้วยคำสั่ง Stop ตามหัวข้อ 7
-4. เริ่มใหม่โดยไม่ใส่ `--headed` เพื่อกลับไปทำงานแบบ Headless
-
-ห้ามให้สคริปต์หรือ AI กรอกรหัสผ่าน, OTP/MFA, CAPTCHA หรือรหัสยืนยันใด ๆ
-
-## 5. ตรวจสอบการเชื่อมต่อ
-
-หลังเริ่ม Ghost Mode แล้ว รัน:
-
-```powershell
-node scripts/connect-meta-ai.js --browser edge
-```
-
-คำสั่งนี้ตรวจการเชื่อมต่อกับโปรเซสและโปรไฟล์ Ghost ที่บันทึกไว้ และแจ้งว่าพบแท็บ Meta AI หรือไม่ จะไม่เชื่อมต่อกับเบราว์เซอร์ที่เปิดใช้งานทั่วไปหรือพอร์ตที่ไม่รู้จัก
-
-## 6. ดูการทำงานแบบสด
-
-เปิด Viewer แบบอ่านอย่างเดียว:
-
-```powershell
-node scripts/viewer-server.js --browser edge
-```
-
-เปิด URL นี้ในเบราว์เซอร์ที่คุณใช้งานตามปกติ:
+ตำแหน่ง Skill จะเป็น:
 
 ```text
-http://127.0.0.1:9229/viewer
+%USERPROFILE%\\.agents\\skills\\meta\\SKILL.md
 ```
 
-Viewer แสดงภาพหน้าเว็บและสถานะของ Ghost Browser โดยไม่ส่งคำสั่งคลิกหรือพิมพ์จากหน้า Viewer และแสดง URL โดยตัด Query String และ Fragment ออก
+### ติดตั้งเฉพาะโปรเจกต์
 
-## 7. คำสั่งจัดการ
+คัดลอกทั้งโฟลเดอร์ Repository ไปไว้ที่:
 
-แสดงเบราว์เซอร์ที่ตรวจพบ:
+```text
+<project-root>\\.agents\\skills\\meta\\SKILL.md
+```
+
+Codex จะค้นหา Skills ใน `.agents/skills` ของโปรเจกต์และโฟลเดอร์แม่ตามขอบเขตที่กำหนด
+
+### เรียกใช้งาน
+
+- Codex CLI / IDE: พิมพ์ `$meta` ตามด้วยคำสั่ง เช่น `$meta ช่วยค้นหาไอเดียโพสต์ที่กำลังเป็นกระแส`
+- ChatGPT Desktop ที่รองรับ standalone Skills: เปิด **Skills** ใน Sidebar เพื่อตรวจดู Skills ที่มีในสภาพแวดล้อมนั้น หากมีขั้นตอน Add/Import ให้เพิ่มโฟลเดอร์ Skill นี้ตามตัวเลือกที่ UI รองรับ จากนั้นเรียกด้วย `@meta` หรือเลือกจาก Skills UI
+- หากไม่มีตัวเลือกเพิ่ม Skill จากโฟลเดอร์หรือ Repository ใน UI เวอร์ชันที่ใช้อยู่ ให้ถือว่ายังไม่ได้ติดตั้ง อย่าสมมติว่าการ Clone GitHub ทำให้ ChatGPT โหลด Skill ให้เอง
+
+การติดตั้งไฟล์ใน Repository นี้ไม่ได้ทำให้ Skill ปรากฏใน ChatGPT Web หรือ Mobile โดยอัตโนมัติ
+
+อ่านเอกสารทางการ: [Build skills](https://learn.chatgpt.com/docs/build-skills)
+
+## 8. ใช้งานเครื่องมือสร้างภาพ
+
+เมื่อ Chrome โปรไฟล์เฉพาะเปิดอยู่และลงชื่อเข้าใช้ Meta AI แล้ว ให้เปิด PowerShell ในโฟลเดอร์ Repository
 
 ```powershell
-node scripts/ghost-launcher.js list-browsers
+node scripts/create-image.js "ภาพร้านกาแฟมินิมอลในสวน แสงเช้า โทนอบอุ่น"
 ```
 
-หยุด Ghost Browser ของ Edge:
+กำหนดโฟลเดอร์ปลายทางเองได้:
 
 ```powershell
-node scripts/ghost-launcher.js stop --browser edge
+node scripts/create-image.js "ภาพสินค้าบนพื้นหลังสีขาว" "D:\\MetaAI-Output"
 ```
 
-คำสั่ง Stop จะตรวจสอบว่าโปรเซสที่บันทึกไว้เป็นของโปรไฟล์แยกที่เลือกจริงก่อนหยุด หากยืนยันเจ้าของโปรเซสไม่ได้ จะปฏิเสธการหยุดเพื่อป้องกันการปิดโปรแกรมผิดตัว
+เมื่อสำเร็จ สคริปต์จะแสดงสถานะการสร้างภาพ ขนาดภาพ ประเภทไฟล์ และยืนยันว่าไฟล์ดาวน์โหลดมีขนาดมากกว่า 0 ไบต์
 
-## 8. สร้างภาพด้วย Meta AI
+ค่าเริ่มต้นจะบันทึกไว้ใน:
 
-เมื่อ Ghost Browser เปิดอยู่และบัญชี Meta AI ลงชื่อเข้าใช้แล้ว:
-
-```powershell
-node scripts/create-image.js "ภาพร้านกาแฟมินิมอลในสวน แสงเช้า โทนอบอุ่น" --browser edge
+```text
+%USERPROFILE%\\Pictures\\MetaAI-Generated
 ```
 
-กำหนดโฟลเดอร์บันทึกได้:
+สคริปต์นี้ทำงานเฉพาะ **Image Generation** และอาศัย selector ของหน้า Meta AI ที่อาจเปลี่ยนได้ หากหน้าเว็บเปลี่ยนจนหา Composer หรือปุ่มดาวน์โหลดไม่พบ ให้หยุดและตรวจ UI/selector ก่อน อย่ารันซ้ำแบบไม่ตรวจสอบ
 
-```powershell
-node scripts/create-image.js "ภาพสินค้าบนพื้นหลังสีขาว" --browser edge --output "D:\MetaAI-Output"
-```
+## 9. ใช้ Skill ทำงานประเภทอื่น
 
-สคริปต์จะตรวจ Composer, สถานะการสร้าง, ภาพผลลัพธ์, ปุ่มดาวน์โหลด และไฟล์ที่บันทึกแยกจากกัน หาก UI เปลี่ยนจนหาองค์ประกอบไม่พบ ให้หยุดและตรวจหน้าเว็บก่อน ไม่ควรลองซ้ำโดยไม่ตรวจสอบ
+พิมพ์คำขอที่ขึ้นต้นด้วย `$meta` หรือ `@meta` พร้อมระบุเป้าหมายตามปกติ เช่น:
 
-## 9. หลักการแยกการควบคุมและความปลอดภัย
+- `$meta ช่วยวางแผนคอนเทนต์สำหรับร้านค้าออนไลน์`
+- `$meta ค้นหาตัวอย่างโพสต์สาธารณะที่เกี่ยวกับ...`
+- `$meta ช่วยคิด Storyboard สำหรับวิดีโอสั้น`
+- `$meta สร้างภาพสินค้า...`
 
-- ใช้โปรไฟล์เฉพาะใน `%LOCALAPPDATA%\MetaAI-CDP-Profile\<browser>` เท่านั้น
-- ไม่อ่านหรือใช้โปรไฟล์เบราว์เซอร์ประจำวัน
-- ไม่ควบคุมเมาส์/คีย์บอร์ดระดับระบบ ไม่เปลี่ยนหน้าต่างที่กำลังโฟกัส และไม่สลับแท็บในเบราว์เซอร์ส่วนตัว
-- Headless เป็นค่าเริ่มต้น; `--headed` ใช้เฉพาะเมื่อต้องลงชื่อเข้าใช้หรือดูหน้าต่าง Ghost ด้วยตนเอง
-- Endpoint สำหรับควบคุมเบราว์เซอร์รับการเชื่อมต่อเฉพาะ `127.0.0.1` ห้ามเปิดออกสู่ LAN หรืออินเทอร์เน็ต
-- ห้ามเผยแพร่โปรไฟล์, Cookies, Local Storage, Tokens, Passwords หรือไฟล์ส่วนตัวลง Git
-- ก่อนโพสต์ แสดงความคิดเห็น ส่งข้อความ ซื้อ ชำระเงิน แชร์ ติดตาม หรือเปลี่ยนการตั้งค่าบัญชี ต้องแสดงรายละเอียดและได้รับการยืนยันจากผู้ใช้ทันที ก่อนส่งคำสั่งจริง
-- หากพบ CAPTCHA, MFA หรือการยืนยันบัญชี ให้ผู้ใช้ดำเนินการเอง ห้ามพยายามข้าม
+Skill จะเลือกคู่มืออ้างอิงตามงาน:
 
-## 10. แก้ปัญหาเบื้องต้น
-
-| อาการ | วิธีตรวจสอบ |
+| งาน | คู่มือ |
 |---|---|
-| ไม่พบ Node.js หรือ npm | ติดตั้ง Node.js 20+ แล้วเปิด PowerShell ใหม่ |
-| `npm ci` ล้มเหลว | ตรวจเวอร์ชัน Node.js และการเชื่อมต่อเครือข่าย |
-| ไม่พบ Edge | ตรวจการติดตั้ง Edge หรือระบุเบราว์เซอร์อื่นด้วย `--browser` |
-| พอร์ต Ghost ถูกใช้งาน | Launcher จะปฏิเสธการเชื่อมต่อ อย่าบังคับให้ข้ามการตรวจสอบพอร์ต |
-| ไม่มี PID หรือ Endpoint state | เริ่ม Ghost Browser ใหม่ และตรวจว่าไม่มีโปรเซส Ghost เก่าค้างอยู่ |
-| Firefox เปิดไม่ได้ | รัน `npx playwright-core install firefox` |
-| ไม่พบ Meta AI tab | เปิด Meta AI ในโปรไฟล์ Ghost ที่แยกไว้ |
-| ไม่พบ Composer หรือปุ่มดาวน์โหลด | ตรวจ UI จริงและปรับ Selector อย่างระมัดระวัง |
-| สร้างภาพไม่สำเร็จ | ตรวจสถานะการลงชื่อเข้าใช้ ข้อจำกัดบัญชี และหน้าเว็บจริง |
+| วางแผน วิเคราะห์ เขียน และสรุป | [assistant-agent.md](../references/assistant-agent.md) |
+| ค้นหาโพสต์ Facebook / Instagram / Threads | [social-research.md](../references/social-research.md) |
+| สร้างหรือแก้ไขภาพ/วิดีโอ | [creative-generation.md](../references/creative-generation.md) |
+| ตรวจความสามารถและข้อจำกัดตาม UI จริง | [capability-map.md](../references/capability-map.md) |
+| แบ่งหน้าที่ Meta AI และ ChatGPT | [collaboration-model.md](../references/collaboration-model.md) |
 
-## 11. ทดสอบและอัปเดต
+อย่าถือว่าทุกความสามารถมีให้ทุกบัญชี Skill ต้องตรวจหน้า Meta AI จริงก่อนใช้งาน และต้องแยกผลลัพธ์ที่สร้างแล้วออกจากไฟล์ที่ดาวน์โหลดหรือเว็บไซต์ที่เผยแพร่จริง
 
-รันชุดทดสอบ:
+## 10. ตั้งค่าพอร์ต CDP (กรณีพอร์ต 9222 ถูกใช้งาน)
+
+ค่าเริ่มต้นคือพอร์ต `9222` สามารถกำหนดพอร์ตอื่นใน PowerShell ก่อนเปิด Chrome ได้ เช่น:
 
 ```powershell
-npm test
+$env:META_AI_CDP_PORT = "9333"
+node scripts/launch-meta-cdp.js
 ```
 
-อัปเดต Repository ที่ติดตั้งด้วย Git:
+ใช้ค่าเดียวกันในหน้าต่าง PowerShell ที่รันสคริปต์เชื่อมต่อหรือสร้างภาพด้วย:
+
+```powershell
+$env:META_AI_CDP_PORT = "9333"
+node scripts/connect-meta-ai.js
+```
+
+## 11. ความปลอดภัยและความเป็นส่วนตัว
+
+- ใช้ dedicated Chrome profile ที่สคริปต์สร้างให้เท่านั้น อย่าเชื่อมต่อกับ Chrome โปรไฟล์ประจำวัน
+- ลงชื่อเข้าใช้ด้วยตนเองเท่านั้น ห้ามส่งรหัสผ่าน, OTP, Cookies หรือ Token ให้สคริปต์หรือ ChatGPT
+- อย่าเปิดพอร์ต CDP ออกสู่อินเทอร์เน็ตหรือเครือข่ายสาธารณะ เพราะผู้ที่เข้าถึงพอร์ตนี้อาจควบคุม browser session ได้
+- อย่าคัดลอกหรือเผยแพร่โฟลเดอร์ `MetaAI-CDP-Profile` เพราะมีข้อมูล session ส่วนตัว
+- อย่า commit โปรไฟล์, Cookies, Local Storage, ไฟล์ดาวน์โหลดส่วนตัว หรือข้อมูลรับรองลง Git
+- Skill ไม่ควรโพสต์ แสดงความคิดเห็น กดถูกใจ ส่งข้อความ แชร์ ซื้อเครดิต หรือเปลี่ยนการตั้งค่าบัญชีโดยไม่มีคำสั่งและการยืนยันที่เหมาะสมจากผู้ใช้
+- หาก Meta แสดง CAPTCHA, MFA หรือขั้นตอนยืนยันบัญชี ให้ผู้ใช้ดำเนินการเอง ห้ามพยายามข้ามระบบเหล่านั้น
+
+## 12. แก้ปัญหาเบื้องต้น
+
+| อาการ | วิธีแก้ |
+|---|---|
+| `node` หรือ `npm` ไม่พบ | ติดตั้ง Node.js 20+ แล้วเปิด PowerShell ใหม่ |
+| `npm ci` ล้มเหลว | ตรวจอินเทอร์เน็ตและ Node.js version จากนั้นรัน `npm ci` อีกครั้ง |
+| หา Chrome ไม่พบ | ติดตั้ง Google Chrome ในตำแหน่งมาตรฐานของ Windows |
+| พอร์ต 9222 ถูกใช้งาน | ตรวจว่ามีโปรเซสอื่นใช้พอร์ตนี้หรือไม่ แล้วกำหนด `META_AI_CDP_PORT` เป็นพอร์ตอื่น |
+| CDP process ไม่พบ | รัน `node scripts/launch-meta-cdp.js` และอย่าปิด Chrome โปรไฟล์เฉพาะ |
+| ไม่พบ Meta AI tab | เปิด `https://www.meta.ai/` ใน Chrome โปรไฟล์เฉพาะ |
+| ไม่พบ Composer หรือ Download button | UI อาจเปลี่ยน ให้ตรวจหน้าเว็บและปรับ selector อย่างระมัดระวัง |
+| สร้างภาพไม่สำเร็จ | ตรวจว่าลงชื่อเข้าใช้แล้วหรือไม่ ตรวจเครดิต/ข้อจำกัดบัญชีและสถานะหน้าเว็บ |
+| Social Search หรือ Video ใช้ไม่ได้ | ตรวจว่าความสามารถนั้นเปิดให้บัญชีนี้จริงหรือไม่ อย่าสมมติว่า Image helper รองรับ |
+
+## 13. อัปเดต Skill
+
+หากติดตั้งด้วย Git:
 
 ```powershell
 git pull
 npm ci
 ```
 
-หากมีการเปลี่ยน Dependencies ให้ใช้ `npm ci` เพื่อให้ตรงกับ Lockfile
+หากมีการเปลี่ยน dependencies ให้ใช้ `npm ci` เพื่อซิงก์ตาม lockfile หลังอัปเดต
 
-## 12. ข้อจำกัด
+## 14. ข้อจำกัดที่ควรทราบ
 
-- Browser automation อาศัย Playwright และเบราว์เซอร์ที่ติดตั้งในเครื่อง
-- Firefox ต้องติดตั้ง Playwright browser engine เพิ่ม
-- Helper สำหรับสร้างภาพอาศัย Selector ของ Meta AI ซึ่งอาจเปลี่ยนแปลงได้
+- Browser automation ปัจจุบันรองรับ Windows เท่านั้น
+- ต้องมี Google Chrome และ Node.js 20+
+- Helper ที่มีอยู่ทำ Image Generation เป็นหลัก ไม่ใช่ระบบอัตโนมัติสำหรับทุกความสามารถของ Meta AI
 - Social Search, Video Generation, Artifacts และ Website Creation ต้องตรวจสอบจาก UI และบัญชีจริงก่อนรับปากว่าสามารถทำได้
+- ไม่มี automated test suite ใน Repository ปัจจุบัน คำสั่งตรวจ syntax ที่ใช้ได้คือ:
+
+```powershell
+node --check scripts/launch-meta-cdp.js
+node --check scripts/find-cdp-endpoint.js
+node --check scripts/connect-meta-ai.js
+node --check scripts/create-image.js
+```

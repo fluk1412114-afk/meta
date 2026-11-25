@@ -8,7 +8,7 @@ const arg = name => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const browserName = arg('--browser') || 'edge';
+const browserName = arg('--browser') || 'chrome';
 const port = Number(arg('--port') || 9229);
 const HOST = '127.0.0.1';
 const clients = new Set();
@@ -17,13 +17,8 @@ let cdpSession;
 let screenshotTimer;
 let browserConnection;
 let page;
-
-function safeDisplayUrl(value) {
-  try {
-    const url = new URL(value);
-    return `${url.origin}${url.pathname}`;
-  } catch { return 'about:blank'; }
-}
+let captureActive = false;
+let screenshotBusy = false;
 
 function broadcastFrame(buffer) {
   const frame = Buffer.from(buffer);
@@ -50,24 +45,48 @@ refresh();setInterval(refresh,1000);
 async function start() {
   browserConnection = await connectGhost({ browser: browserName });
   page = browserConnection.page;
-  current = { browser: browserConnection.selectedBrowser, url: safeDisplayUrl(page.url()), status: 'connected' };
-  page.on('framenavigated', () => { current.url = safeDisplayUrl(page.url()); });
+  current = { browser: browserConnection.selectedBrowser, url: page.url(), status: 'connected · waiting for viewer' };
+  page.on('framenavigated', () => { current.url = page.url(); });
+}
+
+async function startCapture() {
+  if (captureActive || !browserConnection || clients.size === 0) return;
+  captureActive = true;
+  current.status = 'streaming';
   if (browserConnection.selectedBrowser === 'firefox' || browserConnection.selectedBrowser === 'webkit') {
     screenshotTimer = setInterval(async () => {
-      try { broadcastFrame(await page.screenshot({ type: 'jpeg', quality: 65 })); current.url = safeDisplayUrl(page.url()); }
+      if (screenshotBusy || clients.size === 0) return;
+      screenshotBusy = true;
+      try { broadcastFrame(await page.screenshot({ type: 'jpeg', quality: 60 })); current.url = page.url(); }
       catch { current.status = 'screenshot unavailable'; }
-    }, 800);
-  } else {
-    cdpSession = await browserConnection.context.newCDPSession(page);
-    cdpSession.on('Page.screencastFrame', async event => {
-      broadcastFrame(Buffer.from(event.data, 'base64'));
-      try { await cdpSession.send('Page.screencastFrameAck', { sessionId: event.sessionId }); } catch {}
-      current.url = safeDisplayUrl(page.url());
-    });
-    await cdpSession.send('Page.startScreencast', {
-      format: 'jpeg', quality: 70, maxWidth: 1440, maxHeight: 900, everyNthFrame: 1
-    });
+      finally { screenshotBusy = false; }
+    }, 1200);
+    return;
   }
+  cdpSession = await browserConnection.context.newCDPSession(page);
+  cdpSession.on('Page.screencastFrame', async event => {
+    if (clients.size) broadcastFrame(Buffer.from(event.data, 'base64'));
+    try { await cdpSession.send('Page.screencastFrameAck', { sessionId: event.sessionId }); } catch {}
+    current.url = page.url();
+  });
+  await cdpSession.send('Page.startScreencast', {
+    format: 'jpeg', quality: 60, maxWidth: 1280, maxHeight: 800, everyNthFrame: 2
+  });
+}
+
+async function stopCapture() {
+  if (!captureActive || clients.size > 0) return;
+  captureActive = false;
+  clearInterval(screenshotTimer);
+  screenshotTimer = undefined;
+  try {
+    if (cdpSession) {
+      await cdpSession.send('Page.stopScreencast');
+      await cdpSession.detach();
+    }
+  } catch {}
+  cdpSession = undefined;
+  current.status = 'connected · viewer idle';
 }
 
 const server = http.createServer((request, response) => {
@@ -78,7 +97,7 @@ const server = http.createServer((request, response) => {
   }
   if (request.url === '/status') {
     response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-    response.end(JSON.stringify({ ...current, url: safeDisplayUrl(current.url) }));
+    response.end(JSON.stringify(current));
     return;
   }
   if (request.url === '/stream') {
@@ -87,7 +106,11 @@ const server = http.createServer((request, response) => {
       'cache-control': 'no-store', connection: 'keep-alive'
     });
     clients.add(response);
-    request.on('close', () => clients.delete(response));
+    void startCapture().catch(error => { current.status = `capture error: ${error.message}`; });
+    request.on('close', () => {
+      clients.delete(response);
+      if (clients.size === 0) void stopCapture();
+    });
     return;
   }
   response.writeHead(404); response.end('Not found');
@@ -107,8 +130,10 @@ async function shutdown() {
   clearInterval(screenshotTimer);
   try { if (cdpSession) { await cdpSession.send('Page.stopScreencast').catch(() => {}); await cdpSession.detach(); } } catch {}
   for (const response of clients) response.end();
+  clients.clear();
   server.close();
-  try { await browserConnection?.browser.close(); } catch {}
+  await stopCapture();
+  // Viewer is an observer: disconnecting it must not terminate a shared Ghost Browser session.
   process.exit(0);
 }
 process.on('SIGINT', shutdown);
